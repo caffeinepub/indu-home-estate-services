@@ -1,7 +1,7 @@
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient, useQueries } from "@tanstack/react-query";
 import { useActor } from "./useActor";
-import type { User, Service, SubService, Booking } from "../backend";
-import { Role } from "../backend";
+import type { User, Service, SubService, Booking, Technician, Invoice } from "../backend";
+import { Role, BookingStatus } from "../backend";
 
 export function useGetUsers() {
   const { actor, isFetching } = useActor();
@@ -62,14 +62,65 @@ export function useCreateBooking() {
       subServiceId,
       propertyType,
       quantity,
+      scheduledDate,
+      scheduledTime,
+      address,
+      notes,
     }: {
       customerId: bigint;
       subServiceId: bigint;
       propertyType: string;
       quantity: bigint;
+      scheduledDate: string;
+      scheduledTime: string;
+      address: string;
+      notes: string;
     }): Promise<Booking> => {
       if (!actor) throw new Error("No actor available");
-      return actor.createBooking(customerId, subServiceId, propertyType, quantity);
+      return actor.createBooking(
+        customerId,
+        subServiceId,
+        propertyType,
+        quantity,
+        scheduledDate,
+        scheduledTime,
+        address,
+        notes
+      );
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["bookings"], refetchType: "all" });
+    },
+  });
+}
+
+export function useGetBookings() {
+  const { actor, isFetching } = useActor();
+  return useQuery<Booking[]>({
+    queryKey: ["bookings"],
+    queryFn: async () => {
+      if (!actor) return [];
+      return actor.getBookings();
+    },
+    enabled: !!actor && !isFetching,
+    staleTime: 0,
+    refetchOnMount: true,
+  });
+}
+
+export function useUpdateBookingStatus() {
+  const { actor } = useActor();
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({
+      bookingId,
+      newStatus,
+    }: {
+      bookingId: bigint;
+      newStatus: BookingStatus;
+    }): Promise<boolean> => {
+      if (!actor) throw new Error("No actor available");
+      return actor.updateBookingStatus(bookingId, newStatus);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["bookings"] });
@@ -77,4 +128,114 @@ export function useCreateBooking() {
   });
 }
 
-export { Role };
+export function useGetAllSubServices(serviceIds: bigint[]) {
+  const { actor, isFetching } = useActor();
+  return useQueries({
+    queries: serviceIds.map((id) => ({
+      queryKey: ["subServices", id.toString()],
+      queryFn: async () => {
+        if (!actor) return [] as SubService[];
+        return actor.getSubServicesByService(id);
+      },
+      enabled: !!actor && !isFetching,
+    })),
+  });
+}
+
+/* ─── Technician Hooks ──────────────────────────────────────── */
+
+export function useGetTechnicians() {
+  const { actor, isFetching } = useActor();
+  return useQuery<Technician[]>({
+    queryKey: ["technicians"],
+    queryFn: async () => {
+      if (!actor) return [];
+      return actor.getTechnicians();
+    },
+    enabled: !!actor && !isFetching,
+  });
+}
+
+export function useCreateTechnician() {
+  const { actor } = useActor();
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ name, phone }: { name: string; phone: string }): Promise<Technician> => {
+      if (!actor) throw new Error("No actor available");
+      return actor.createTechnician(name, phone);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["technicians"] });
+    },
+  });
+}
+
+export function useAssignTechnician() {
+  const { actor } = useActor();
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({
+      bookingId,
+      technicianId,
+    }: {
+      bookingId: bigint;
+      technicianId: bigint;
+    }): Promise<boolean> => {
+      if (!actor) throw new Error("No actor available");
+      return actor.assignTechnician(bookingId, technicianId);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["bookings"] });
+      queryClient.invalidateQueries({ queryKey: ["technicians"] });
+    },
+  });
+}
+
+export function useMarkPayment() {
+  const { actor } = useActor();
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({
+      bookingId,
+      referenceId,
+    }: {
+      bookingId: bigint;
+      referenceId: string;
+    }): Promise<boolean> => {
+      if (!actor) throw new Error("No actor available");
+      return actor.markPayment(bookingId, referenceId);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["bookings"] });
+    },
+  });
+}
+
+export function useDeactivateTechnician() {
+  const { actor } = useActor();
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ technicianId }: { technicianId: bigint }): Promise<boolean> => {
+      if (!actor) throw new Error("No actor available");
+      return actor.deactivateTechnician(technicianId);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["technicians"] });
+    },
+  });
+}
+
+export function useGenerateInvoice(bookingId: bigint | null) {
+  const { actor, isFetching } = useActor();
+  return useQuery<Invoice | null>({
+    queryKey: ["invoice", bookingId?.toString()],
+    queryFn: async () => {
+      if (!actor || bookingId === null) return null;
+      return actor.generateInvoice(bookingId);
+    },
+    enabled: !!actor && !isFetching && bookingId !== null,
+  });
+}
+
+export { Role, BookingStatus };
+export type { Technician, Invoice };

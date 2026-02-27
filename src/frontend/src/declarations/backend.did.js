@@ -13,18 +13,27 @@ export const BookingStatus = IDL.Variant({
   'cancelled' : IDL.Null,
   'pending' : IDL.Null,
   'completed' : IDL.Null,
+  'confirmed' : IDL.Null,
   'inProgress' : IDL.Null,
 });
 export const Booking = IDL.Record({
   'id' : IDL.Nat,
   'status' : BookingStatus,
+  'paymentStatus' : IDL.Text,
   'propertyType' : IDL.Text,
+  'scheduledDate' : IDL.Text,
+  'scheduledTime' : IDL.Text,
   'createdAt' : IDL.Int,
+  'commission' : IDL.Nat,
   'subServiceId' : IDL.Nat,
   'advanceAmount' : IDL.Nat,
   'totalAmount' : IDL.Nat,
+  'address' : IDL.Text,
+  'technicianId' : IDL.Opt(IDL.Nat),
+  'notes' : IDL.Text,
   'quantity' : IDL.Nat,
   'customerId' : IDL.Nat,
+  'paymentReference' : IDL.Opt(IDL.Text),
 });
 export const Service = IDL.Record({
   'id' : IDL.Nat,
@@ -42,6 +51,15 @@ export const SubService = IDL.Record({
   'serviceId' : IDL.Nat,
   'basePrice' : IDL.Nat,
 });
+export const Technician = IDL.Record({
+  'id' : IDL.Nat,
+  'totalCompleted' : IDL.Nat,
+  'totalAssigned' : IDL.Nat,
+  'name' : IDL.Text,
+  'createdAt' : IDL.Int,
+  'activeStatus' : IDL.Bool,
+  'phone' : IDL.Text,
+});
 export const Role = IDL.Variant({
   'technician' : IDL.Null,
   'admin' : IDL.Null,
@@ -53,10 +71,34 @@ export const User = IDL.Record({
   'createdAt' : IDL.Int,
   'role' : Role,
 });
+export const Invoice = IDL.Record({
+  'balanceAmount' : IDL.Nat,
+  'serviceName' : IDL.Text,
+  'paymentStatus' : IDL.Text,
+  'bookingId' : IDL.Nat,
+  'scheduledDate' : IDL.Text,
+  'scheduledTime' : IDL.Text,
+  'commission' : IDL.Nat,
+  'subServiceName' : IDL.Text,
+  'advanceAmount' : IDL.Nat,
+  'totalAmount' : IDL.Nat,
+  'address' : IDL.Text,
+  'quantity' : IDL.Nat,
+});
 
 export const idlService = IDL.Service({
+  'assignTechnician' : IDL.Func([IDL.Nat, IDL.Nat], [IDL.Bool], []),
   'createBooking' : IDL.Func(
-      [IDL.Nat, IDL.Nat, IDL.Text, IDL.Nat],
+      [
+        IDL.Nat,
+        IDL.Nat,
+        IDL.Text,
+        IDL.Nat,
+        IDL.Text,
+        IDL.Text,
+        IDL.Text,
+        IDL.Text,
+      ],
       [Booking],
       [],
     ),
@@ -70,7 +112,10 @@ export const idlService = IDL.Service({
       [SubService],
       [],
     ),
+  'createTechnician' : IDL.Func([IDL.Text, IDL.Text], [Technician], []),
   'createUser' : IDL.Func([IDL.Text, Role], [User], []),
+  'deactivateTechnician' : IDL.Func([IDL.Nat], [IDL.Bool], []),
+  'generateInvoice' : IDL.Func([IDL.Nat], [IDL.Opt(Invoice)], ['query']),
   'getBookings' : IDL.Func([], [IDL.Vec(Booking)], ['query']),
   'getServices' : IDL.Func([], [IDL.Vec(Service)], ['query']),
   'getSubServicesByService' : IDL.Func(
@@ -78,9 +123,13 @@ export const idlService = IDL.Service({
       [IDL.Vec(SubService)],
       ['query'],
     ),
+  'getTechnicians' : IDL.Func([], [IDL.Vec(Technician)], ['query']),
   'getUsers' : IDL.Func([], [IDL.Vec(User)], ['query']),
   'isSeedDone' : IDL.Func([], [IDL.Bool], ['query']),
+  'markPayment' : IDL.Func([IDL.Nat, IDL.Text], [IDL.Bool], []),
   'seedData' : IDL.Func([], [], []),
+  'seedSubServicesV2' : IDL.Func([], [], []),
+  'updateBookingStatus' : IDL.Func([IDL.Nat, BookingStatus], [IDL.Bool], []),
 });
 
 export const idlInitArgs = [];
@@ -91,18 +140,27 @@ export const idlFactory = ({ IDL }) => {
     'cancelled' : IDL.Null,
     'pending' : IDL.Null,
     'completed' : IDL.Null,
+    'confirmed' : IDL.Null,
     'inProgress' : IDL.Null,
   });
   const Booking = IDL.Record({
     'id' : IDL.Nat,
     'status' : BookingStatus,
+    'paymentStatus' : IDL.Text,
     'propertyType' : IDL.Text,
+    'scheduledDate' : IDL.Text,
+    'scheduledTime' : IDL.Text,
     'createdAt' : IDL.Int,
+    'commission' : IDL.Nat,
     'subServiceId' : IDL.Nat,
     'advanceAmount' : IDL.Nat,
     'totalAmount' : IDL.Nat,
+    'address' : IDL.Text,
+    'technicianId' : IDL.Opt(IDL.Nat),
+    'notes' : IDL.Text,
     'quantity' : IDL.Nat,
     'customerId' : IDL.Nat,
+    'paymentReference' : IDL.Opt(IDL.Text),
   });
   const Service = IDL.Record({
     'id' : IDL.Nat,
@@ -120,6 +178,15 @@ export const idlFactory = ({ IDL }) => {
     'serviceId' : IDL.Nat,
     'basePrice' : IDL.Nat,
   });
+  const Technician = IDL.Record({
+    'id' : IDL.Nat,
+    'totalCompleted' : IDL.Nat,
+    'totalAssigned' : IDL.Nat,
+    'name' : IDL.Text,
+    'createdAt' : IDL.Int,
+    'activeStatus' : IDL.Bool,
+    'phone' : IDL.Text,
+  });
   const Role = IDL.Variant({
     'technician' : IDL.Null,
     'admin' : IDL.Null,
@@ -131,10 +198,34 @@ export const idlFactory = ({ IDL }) => {
     'createdAt' : IDL.Int,
     'role' : Role,
   });
+  const Invoice = IDL.Record({
+    'balanceAmount' : IDL.Nat,
+    'serviceName' : IDL.Text,
+    'paymentStatus' : IDL.Text,
+    'bookingId' : IDL.Nat,
+    'scheduledDate' : IDL.Text,
+    'scheduledTime' : IDL.Text,
+    'commission' : IDL.Nat,
+    'subServiceName' : IDL.Text,
+    'advanceAmount' : IDL.Nat,
+    'totalAmount' : IDL.Nat,
+    'address' : IDL.Text,
+    'quantity' : IDL.Nat,
+  });
   
   return IDL.Service({
+    'assignTechnician' : IDL.Func([IDL.Nat, IDL.Nat], [IDL.Bool], []),
     'createBooking' : IDL.Func(
-        [IDL.Nat, IDL.Nat, IDL.Text, IDL.Nat],
+        [
+          IDL.Nat,
+          IDL.Nat,
+          IDL.Text,
+          IDL.Nat,
+          IDL.Text,
+          IDL.Text,
+          IDL.Text,
+          IDL.Text,
+        ],
         [Booking],
         [],
       ),
@@ -148,7 +239,10 @@ export const idlFactory = ({ IDL }) => {
         [SubService],
         [],
       ),
+    'createTechnician' : IDL.Func([IDL.Text, IDL.Text], [Technician], []),
     'createUser' : IDL.Func([IDL.Text, Role], [User], []),
+    'deactivateTechnician' : IDL.Func([IDL.Nat], [IDL.Bool], []),
+    'generateInvoice' : IDL.Func([IDL.Nat], [IDL.Opt(Invoice)], ['query']),
     'getBookings' : IDL.Func([], [IDL.Vec(Booking)], ['query']),
     'getServices' : IDL.Func([], [IDL.Vec(Service)], ['query']),
     'getSubServicesByService' : IDL.Func(
@@ -156,9 +250,13 @@ export const idlFactory = ({ IDL }) => {
         [IDL.Vec(SubService)],
         ['query'],
       ),
+    'getTechnicians' : IDL.Func([], [IDL.Vec(Technician)], ['query']),
     'getUsers' : IDL.Func([], [IDL.Vec(User)], ['query']),
     'isSeedDone' : IDL.Func([], [IDL.Bool], ['query']),
+    'markPayment' : IDL.Func([IDL.Nat, IDL.Text], [IDL.Bool], []),
     'seedData' : IDL.Func([], [], []),
+    'seedSubServicesV2' : IDL.Func([], [], []),
+    'updateBookingStatus' : IDL.Func([IDL.Nat, BookingStatus], [IDL.Bool], []),
   });
 };
 

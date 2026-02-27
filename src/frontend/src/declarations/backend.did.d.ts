@@ -13,19 +13,42 @@ import type { Principal } from '@icp-sdk/core/principal';
 export interface Booking {
   'id' : bigint,
   'status' : BookingStatus,
+  'paymentStatus' : string,
   'propertyType' : string,
+  'scheduledDate' : string,
+  'scheduledTime' : string,
   'createdAt' : bigint,
+  'commission' : bigint,
   'subServiceId' : bigint,
   'advanceAmount' : bigint,
   'totalAmount' : bigint,
+  'address' : string,
+  'technicianId' : [] | [bigint],
+  'notes' : string,
   'quantity' : bigint,
   'customerId' : bigint,
+  'paymentReference' : [] | [string],
 }
 export type BookingStatus = { 'assigned' : null } |
   { 'cancelled' : null } |
   { 'pending' : null } |
   { 'completed' : null } |
+  { 'confirmed' : null } |
   { 'inProgress' : null };
+export interface Invoice {
+  'balanceAmount' : bigint,
+  'serviceName' : string,
+  'paymentStatus' : string,
+  'bookingId' : bigint,
+  'scheduledDate' : string,
+  'scheduledTime' : string,
+  'commission' : bigint,
+  'subServiceName' : string,
+  'advanceAmount' : bigint,
+  'totalAmount' : bigint,
+  'address' : string,
+  'quantity' : bigint,
+}
 export type Role = { 'technician' : null } |
   { 'admin' : null } |
   { 'customer' : null };
@@ -45,6 +68,15 @@ export interface SubService {
   'serviceId' : bigint,
   'basePrice' : bigint,
 }
+export interface Technician {
+  'id' : bigint,
+  'totalCompleted' : bigint,
+  'totalAssigned' : bigint,
+  'name' : string,
+  'createdAt' : bigint,
+  'activeStatus' : boolean,
+  'phone' : string,
+}
 export interface User {
   'id' : bigint,
   'name' : string,
@@ -52,19 +84,30 @@ export interface User {
   'role' : Role,
 }
 export interface _SERVICE {
-  'createBooking' : ActorMethod<[bigint, bigint, string, bigint], Booking>,
+  'assignTechnician' : ActorMethod<[bigint, bigint], boolean>,
+  'createBooking' : ActorMethod<
+    [bigint, bigint, string, bigint, string, string, string, string],
+    Booking
+  >,
   'createService' : ActorMethod<[string, string, bigint, string], Service>,
   'createSubService' : ActorMethod<
     [bigint, string, bigint, string],
     SubService
   >,
+  'createTechnician' : ActorMethod<[string, string], Technician>,
   'createUser' : ActorMethod<[string, Role], User>,
+  'deactivateTechnician' : ActorMethod<[bigint], boolean>,
+  'generateInvoice' : ActorMethod<[bigint], [] | [Invoice]>,
   'getBookings' : ActorMethod<[], Array<Booking>>,
   'getServices' : ActorMethod<[], Array<Service>>,
   'getSubServicesByService' : ActorMethod<[bigint], Array<SubService>>,
+  'getTechnicians' : ActorMethod<[], Array<Technician>>,
   'getUsers' : ActorMethod<[], Array<User>>,
   'isSeedDone' : ActorMethod<[], boolean>,
+  'markPayment' : ActorMethod<[bigint, string], boolean>,
   'seedData' : ActorMethod<[], undefined>,
+  'seedSubServicesV2' : ActorMethod<[], undefined>,
+  'updateBookingStatus' : ActorMethod<[bigint, BookingStatus], boolean>,
 }
 export declare const idlService: IDL.ServiceClass;
 export declare const idlInitArgs: IDL.Type[];
