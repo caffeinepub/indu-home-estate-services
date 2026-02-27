@@ -1,8 +1,9 @@
 import Array "mo:core/Array";
 import Nat "mo:core/Nat";
 import Time "mo:core/Time";
-import Text "mo:core/Text";
+import Migration "migration";
 
+(with migration = Migration.run)
 actor {
   type Role = {
     #admin;
@@ -72,6 +73,7 @@ actor {
     scheduledTime : Text;
     address : Text;
     notes : Text;
+    balanceAmount : Nat;
   };
 
   type Invoice = {
@@ -474,6 +476,7 @@ actor {
     if (totalAmount < 1000) { totalAmount := 1000 };
     let advanceAmount = totalAmount / 3;
     let commission = totalAmount / 10;
+    let balanceAmount = totalAmount - advanceAmount;
 
     let booking : Booking = {
       id = nextBookingId;
@@ -493,6 +496,7 @@ actor {
       scheduledTime;
       address;
       notes;
+      balanceAmount;
     };
 
     bookings := bookings.concat([booking]);
@@ -652,10 +656,9 @@ actor {
           quantity = booking.quantity;
           totalAmount = booking.totalAmount;
           advanceAmount = booking.advanceAmount;
-          balanceAmount = if (booking.totalAmount > booking.advanceAmount) {
-            booking.totalAmount - booking.advanceAmount;
-          } else {
-            0;
+          balanceAmount = switch (booking.totalAmount > booking.advanceAmount) {
+            case (true) { booking.totalAmount - booking.advanceAmount };
+            case (false) { 0 };
           };
           commission = booking.commission;
           paymentStatus = booking.paymentStatus;
@@ -670,6 +673,32 @@ actor {
 
   public query ({ caller }) func getBookings() : async [Booking] {
     bookings;
+  };
+
+  public shared ({ caller }) func markFullyPaid(bookingId : Nat) : async Bool {
+    var found = false;
+    bookings := bookings.map<Booking, Booking>(
+      func(b) {
+        if (b.id == bookingId and not found) {
+          found := true;
+          { b with paymentStatus = "paid" };
+        } else { b };
+      }
+    );
+    found;
+  };
+
+  public shared ({ caller }) func cancelBooking(bookingId : Nat) : async Bool {
+    var found = false;
+    bookings := bookings.map<Booking, Booking>(
+      func(b) {
+        if (b.id == bookingId and not found) {
+          found := true;
+          { b with status = #cancelled };
+        } else { b };
+      }
+    );
+    found;
   };
 
   system func postupgrade() {

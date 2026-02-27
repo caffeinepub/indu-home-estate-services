@@ -32,6 +32,7 @@ export interface Service {
 export interface Booking {
     id: bigint;
     status: BookingStatus;
+    balanceAmount: bigint;
     paymentStatus: string;
     propertyType: string;
     scheduledDate: string;
@@ -86,6 +87,7 @@ export enum Role {
 }
 export interface backendInterface {
     assignTechnician(bookingId: bigint, technicianId: bigint): Promise<boolean>;
+    cancelBooking(bookingId: bigint): Promise<boolean>;
     createBooking(customerId: bigint, subServiceId: bigint, propertyType: string, quantity: bigint, scheduledDate: string, scheduledTime: string, address: string, notes: string): Promise<Booking>;
     createService(name: string, category: string, basePrice: bigint, pricingType: string): Promise<Service>;
     createSubService(serviceId: bigint, name: string, basePrice: bigint, pricingType: string): Promise<SubService>;
@@ -99,6 +101,7 @@ export interface backendInterface {
     getTechnicians(): Promise<Array<Technician>>;
     getUsers(): Promise<Array<User>>;
     isSeedDone(): Promise<boolean>;
+    markFullyPaid(bookingId: bigint): Promise<boolean>;
     markPayment(bookingId: bigint, referenceId: string): Promise<boolean>;
     seedData(): Promise<void>;
     seedSubServicesV2(): Promise<void>;

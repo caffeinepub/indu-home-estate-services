@@ -13,6 +13,7 @@ import type { Principal } from '@icp-sdk/core/principal';
 export interface Booking {
   'id' : bigint,
   'status' : BookingStatus,
+  'balanceAmount' : bigint,
   'paymentStatus' : string,
   'propertyType' : string,
   'scheduledDate' : string,
@@ -85,6 +86,7 @@ export interface User {
 }
 export interface _SERVICE {
   'assignTechnician' : ActorMethod<[bigint, bigint], boolean>,
+  'cancelBooking' : ActorMethod<[bigint], boolean>,
   'createBooking' : ActorMethod<
     [bigint, bigint, string, bigint, string, string, string, string],
     Booking
@@ -104,6 +106,7 @@ export interface _SERVICE {
   'getTechnicians' : ActorMethod<[], Array<Technician>>,
   'getUsers' : ActorMethod<[], Array<User>>,
   'isSeedDone' : ActorMethod<[], boolean>,
+  'markFullyPaid' : ActorMethod<[bigint], boolean>,
   'markPayment' : ActorMethod<[bigint, string], boolean>,
   'seedData' : ActorMethod<[], undefined>,
   'seedSubServicesV2' : ActorMethod<[], undefined>,

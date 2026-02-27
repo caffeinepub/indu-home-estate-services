@@ -19,6 +19,7 @@ export const BookingStatus = IDL.Variant({
 export const Booking = IDL.Record({
   'id' : IDL.Nat,
   'status' : BookingStatus,
+  'balanceAmount' : IDL.Nat,
   'paymentStatus' : IDL.Text,
   'propertyType' : IDL.Text,
   'scheduledDate' : IDL.Text,
@@ -88,6 +89,7 @@ export const Invoice = IDL.Record({
 
 export const idlService = IDL.Service({
   'assignTechnician' : IDL.Func([IDL.Nat, IDL.Nat], [IDL.Bool], []),
+  'cancelBooking' : IDL.Func([IDL.Nat], [IDL.Bool], []),
   'createBooking' : IDL.Func(
       [
         IDL.Nat,
@@ -126,6 +128,7 @@ export const idlService = IDL.Service({
   'getTechnicians' : IDL.Func([], [IDL.Vec(Technician)], ['query']),
   'getUsers' : IDL.Func([], [IDL.Vec(User)], ['query']),
   'isSeedDone' : IDL.Func([], [IDL.Bool], ['query']),
+  'markFullyPaid' : IDL.Func([IDL.Nat], [IDL.Bool], []),
   'markPayment' : IDL.Func([IDL.Nat, IDL.Text], [IDL.Bool], []),
   'seedData' : IDL.Func([], [], []),
   'seedSubServicesV2' : IDL.Func([], [], []),
@@ -146,6 +149,7 @@ export const idlFactory = ({ IDL }) => {
   const Booking = IDL.Record({
     'id' : IDL.Nat,
     'status' : BookingStatus,
+    'balanceAmount' : IDL.Nat,
     'paymentStatus' : IDL.Text,
     'propertyType' : IDL.Text,
     'scheduledDate' : IDL.Text,
@@ -215,6 +219,7 @@ export const idlFactory = ({ IDL }) => {
   
   return IDL.Service({
     'assignTechnician' : IDL.Func([IDL.Nat, IDL.Nat], [IDL.Bool], []),
+    'cancelBooking' : IDL.Func([IDL.Nat], [IDL.Bool], []),
     'createBooking' : IDL.Func(
         [
           IDL.Nat,
@@ -253,6 +258,7 @@ export const idlFactory = ({ IDL }) => {
     'getTechnicians' : IDL.Func([], [IDL.Vec(Technician)], ['query']),
     'getUsers' : IDL.Func([], [IDL.Vec(User)], ['query']),
     'isSeedDone' : IDL.Func([], [IDL.Bool], ['query']),
+    'markFullyPaid' : IDL.Func([IDL.Nat], [IDL.Bool], []),
     'markPayment' : IDL.Func([IDL.Nat, IDL.Text], [IDL.Bool], []),
     'seedData' : IDL.Func([], [], []),
     'seedSubServicesV2' : IDL.Func([], [], []),

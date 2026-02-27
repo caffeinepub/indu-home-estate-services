@@ -1,7 +1,19 @@
-import { useQuery, useMutation, useQueryClient, useQueries } from "@tanstack/react-query";
+import {
+  useMutation,
+  useQueries,
+  useQuery,
+  useQueryClient,
+} from "@tanstack/react-query";
+import type {
+  Booking,
+  Invoice,
+  Service,
+  SubService,
+  Technician,
+  User,
+} from "../backend";
+import { BookingStatus, Role } from "../backend";
 import { useActor } from "./useActor";
-import type { User, Service, SubService, Booking, Technician, Invoice } from "../backend";
-import { Role, BookingStatus } from "../backend";
 
 export function useGetUsers() {
   const { actor, isFetching } = useActor();
@@ -85,11 +97,14 @@ export function useCreateBooking() {
         scheduledDate,
         scheduledTime,
         address,
-        notes
+        notes,
       );
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["bookings"], refetchType: "all" });
+      queryClient.invalidateQueries({
+        queryKey: ["bookings"],
+        refetchType: "all",
+      });
     },
   });
 }
@@ -160,7 +175,10 @@ export function useCreateTechnician() {
   const { actor } = useActor();
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async ({ name, phone }: { name: string; phone: string }): Promise<Technician> => {
+    mutationFn: async ({
+      name,
+      phone,
+    }: { name: string; phone: string }): Promise<Technician> => {
       if (!actor) throw new Error("No actor available");
       return actor.createTechnician(name, phone);
     },
@@ -215,7 +233,9 @@ export function useDeactivateTechnician() {
   const { actor } = useActor();
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async ({ technicianId }: { technicianId: bigint }): Promise<boolean> => {
+    mutationFn: async ({
+      technicianId,
+    }: { technicianId: bigint }): Promise<boolean> => {
       if (!actor) throw new Error("No actor available");
       return actor.deactivateTechnician(technicianId);
     },
@@ -234,6 +254,38 @@ export function useGenerateInvoice(bookingId: bigint | null) {
       return actor.generateInvoice(bookingId);
     },
     enabled: !!actor && !isFetching && bookingId !== null,
+  });
+}
+
+export function useMarkFullyPaid() {
+  const { actor } = useActor();
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({
+      bookingId,
+    }: { bookingId: bigint }): Promise<boolean> => {
+      if (!actor) throw new Error("No actor available");
+      return actor.markFullyPaid(bookingId);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["bookings"] });
+    },
+  });
+}
+
+export function useCancelBooking() {
+  const { actor } = useActor();
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({
+      bookingId,
+    }: { bookingId: bigint }): Promise<boolean> => {
+      if (!actor) throw new Error("No actor available");
+      return actor.cancelBooking(bookingId);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["bookings"] });
+    },
   });
 }
 

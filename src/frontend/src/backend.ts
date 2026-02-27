@@ -114,6 +114,7 @@ export interface Service {
 export interface Booking {
     id: bigint;
     status: BookingStatus;
+    balanceAmount: bigint;
     paymentStatus: string;
     propertyType: string;
     scheduledDate: string;
@@ -168,6 +169,7 @@ export enum Role {
 }
 export interface backendInterface {
     assignTechnician(bookingId: bigint, technicianId: bigint): Promise<boolean>;
+    cancelBooking(bookingId: bigint): Promise<boolean>;
     createBooking(customerId: bigint, subServiceId: bigint, propertyType: string, quantity: bigint, scheduledDate: string, scheduledTime: string, address: string, notes: string): Promise<Booking>;
     createService(name: string, category: string, basePrice: bigint, pricingType: string): Promise<Service>;
     createSubService(serviceId: bigint, name: string, basePrice: bigint, pricingType: string): Promise<SubService>;
@@ -181,6 +183,7 @@ export interface backendInterface {
     getTechnicians(): Promise<Array<Technician>>;
     getUsers(): Promise<Array<User>>;
     isSeedDone(): Promise<boolean>;
+    markFullyPaid(bookingId: bigint): Promise<boolean>;
     markPayment(bookingId: bigint, referenceId: string): Promise<boolean>;
     seedData(): Promise<void>;
     seedSubServicesV2(): Promise<void>;
@@ -200,6 +203,20 @@ export class Backend implements backendInterface {
             }
         } else {
             const result = await this.actor.assignTechnician(arg0, arg1);
+            return result;
+        }
+    }
+    async cancelBooking(arg0: bigint): Promise<boolean> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.cancelBooking(arg0);
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.cancelBooking(arg0);
             return result;
         }
     }
@@ -385,6 +402,20 @@ export class Backend implements backendInterface {
             return result;
         }
     }
+    async markFullyPaid(arg0: bigint): Promise<boolean> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.markFullyPaid(arg0);
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.markFullyPaid(arg0);
+            return result;
+        }
+    }
     async markPayment(arg0: bigint, arg1: string): Promise<boolean> {
         if (this.processError) {
             try {
@@ -484,6 +515,7 @@ function from_candid_record_n10(_uploadFile: (file: ExternalBlob) => Promise<Uin
 function from_candid_record_n2(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
     id: bigint;
     status: _BookingStatus;
+    balanceAmount: bigint;
     paymentStatus: string;
     propertyType: string;
     scheduledDate: string;
@@ -502,6 +534,7 @@ function from_candid_record_n2(_uploadFile: (file: ExternalBlob) => Promise<Uint
 }): {
     id: bigint;
     status: BookingStatus;
+    balanceAmount: bigint;
     paymentStatus: string;
     propertyType: string;
     scheduledDate: string;
@@ -521,6 +554,7 @@ function from_candid_record_n2(_uploadFile: (file: ExternalBlob) => Promise<Uint
     return {
         id: value.id,
         status: from_candid_BookingStatus_n3(_uploadFile, _downloadFile, value.status),
+        balanceAmount: value.balanceAmount,
         paymentStatus: value.paymentStatus,
         propertyType: value.propertyType,
         scheduledDate: value.scheduledDate,

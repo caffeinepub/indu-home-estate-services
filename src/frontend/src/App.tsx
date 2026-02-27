@@ -1,17 +1,13 @@
-import { useState, useMemo } from "react";
-import { useQueryClient } from "@tanstack/react-query";
-import { motion, AnimatePresence } from "motion/react";
-import { toast } from "sonner";
-import {
-  Loader2, UserPlus, Users, Home, CheckCircle2, ShieldCheck, Wrench, User,
-  BookOpen, TrendingUp, Wallet, BadgePercent, CalendarDays, LayoutDashboard,
-  Phone, CreditCard, ClipboardList, AlertCircle, FileText, XCircle, BarChart2,
-  MapPin, Clock, StickyNote, Ban,
-} from "lucide-react";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import {
   Select,
   SelectContent,
@@ -19,33 +15,72 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Badge } from "@/components/ui/badge";
-import { Skeleton } from "@/components/ui/skeleton";
 import { Separator } from "@/components/ui/separator";
+import { Skeleton } from "@/components/ui/skeleton";
 import { Toaster } from "@/components/ui/sonner";
+import { Textarea } from "@/components/ui/textarea";
+import { useQueryClient } from "@tanstack/react-query";
 import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+  AlertCircle,
+  BadgePercent,
+  Ban,
+  BarChart2,
+  BookOpen,
+  CalendarDays,
+  CheckCheck,
+  CheckCircle2,
+  ClipboardList,
+  Clock,
+  Copy,
+  CreditCard,
+  FileText,
+  Home,
+  LayoutDashboard,
+  Loader2,
+  MapPin,
+  MessageSquare,
+  Phone,
+  ShieldCheck,
+  StickyNote,
+  TrendingUp,
+  User,
+  UserPlus,
+  Users,
+  Wallet,
+  Wrench,
+  XCircle,
+} from "lucide-react";
+import { AnimatePresence, motion } from "motion/react";
+import { useMemo, useState } from "react";
+import { toast } from "sonner";
+import type { Booking, Technician, User as UserType } from "./backend";
+import { SERVICES, SUB_SERVICES } from "./constants/catalog";
 import {
-  useGetUsers, useCreateUser, useGetServices, useGetSubServicesByService,
-  useCreateBooking, useGetBookings, useUpdateBookingStatus, useGetAllSubServices,
-  useGetTechnicians, useCreateTechnician, useAssignTechnician, useMarkPayment,
-  useDeactivateTechnician, useGenerateInvoice,
-  Role, BookingStatus,
+  BookingStatus,
+  Role,
+  useAssignTechnician,
+  useCancelBooking,
+  useCreateBooking,
+  useCreateTechnician,
+  useCreateUser,
+  useDeactivateTechnician,
+  useGenerateInvoice,
+  useGetBookings,
+  useGetTechnicians,
+  useGetUsers,
+  useMarkFullyPaid,
+  useMarkPayment,
+  useUpdateBookingStatus,
 } from "./hooks/useQueries";
-import type { User as UserType, Booking, Technician } from "./backend";
 
 /* ─── WhatsApp Notification Simulation ──────────────────────── */
 
 function sendWhatsAppNotification(
   type: string,
-  details: { to: string; bookingId: bigint; service: string; date: string }
+  details: { to: string; bookingId: bigint; service: string; date: string },
 ) {
   console.log(
-    `[WHATSAPP]\nTo: ${details.to}\nMessage: Booking #${details.bookingId} ${type} for ${details.service} on ${details.date}.`
+    `[WHATSAPP]\nTo: ${details.to}\nMessage: Booking #${details.bookingId} ${type} for ${details.service} on ${details.date}.`,
   );
 }
 
@@ -62,7 +97,10 @@ function formatDate(nanoseconds: bigint): string {
   }).format(new Date(ms));
 }
 
-const ROLE_CONFIG: Record<Role, { label: string; icon: React.FC<{ className?: string }>; className: string }> = {
+const ROLE_CONFIG: Record<
+  Role,
+  { label: string; icon: React.FC<{ className?: string }>; className: string }
+> = {
   [Role.admin]: {
     label: "Admin",
     icon: ShieldCheck,
@@ -84,23 +122,30 @@ const ROLE_CONFIG: Record<Role, { label: string; icon: React.FC<{ className?: st
 
 function getValidNextStatuses(current: BookingStatus): BookingStatus[] {
   switch (current) {
-    case BookingStatus.pending:    return [BookingStatus.assigned, BookingStatus.cancelled];
-    case BookingStatus.confirmed:  return [BookingStatus.assigned, BookingStatus.cancelled];
-    case BookingStatus.assigned:   return [BookingStatus.inProgress, BookingStatus.cancelled];
-    case BookingStatus.inProgress: return [BookingStatus.completed, BookingStatus.cancelled];
-    case BookingStatus.completed:  return [];
-    case BookingStatus.cancelled:  return [];
-    default: return [];
+    case BookingStatus.pending:
+      return [BookingStatus.assigned, BookingStatus.cancelled];
+    case BookingStatus.confirmed:
+      return [BookingStatus.assigned, BookingStatus.cancelled];
+    case BookingStatus.assigned:
+      return [BookingStatus.inProgress, BookingStatus.cancelled];
+    case BookingStatus.inProgress:
+      return [BookingStatus.completed, BookingStatus.cancelled];
+    case BookingStatus.completed:
+      return [];
+    case BookingStatus.cancelled:
+      return [];
+    default:
+      return [];
   }
 }
 
 const STATUS_LABEL: Record<BookingStatus, string> = {
-  [BookingStatus.pending]:    "Pending",
-  [BookingStatus.confirmed]:  "Confirmed",
-  [BookingStatus.assigned]:   "Assigned",
+  [BookingStatus.pending]: "Pending",
+  [BookingStatus.confirmed]: "Confirmed",
+  [BookingStatus.assigned]: "Assigned",
   [BookingStatus.inProgress]: "In Progress",
-  [BookingStatus.completed]:  "Completed",
-  [BookingStatus.cancelled]:  "Cancelled",
+  [BookingStatus.completed]: "Completed",
+  [BookingStatus.cancelled]: "Cancelled",
 };
 
 /* ─── Role Selector ───────────────────────────────────────────── */
@@ -158,7 +203,10 @@ function RoleSelector({
             transition={{ duration: 0.2 }}
             className="mt-3 flex items-center gap-3 overflow-hidden"
           >
-            <Label htmlFor="tech-id-input" className="text-xs text-muted-foreground whitespace-nowrap">
+            <Label
+              htmlFor="tech-id-input"
+              className="text-xs text-muted-foreground whitespace-nowrap"
+            >
               Technician ID:
             </Label>
             <Input
@@ -206,7 +254,9 @@ function UserCard({ user, index }: { user: UserType; index: number }) {
       </div>
       <div className="flex-1 min-w-0">
         <p className="font-medium text-foreground truncate">{user.name}</p>
-        <p className="text-xs text-muted-foreground">{formatDate(user.createdAt)}</p>
+        <p className="text-xs text-muted-foreground">
+          {formatDate(user.createdAt)}
+        </p>
       </div>
       <span className="text-xs text-muted-foreground font-mono hidden sm:block">
         #{String(user.id).padStart(4, "0")}
@@ -251,7 +301,10 @@ function CreateUserForm() {
     if (!name.trim() || !role) return;
 
     try {
-      const newUser = await createUser({ name: name.trim(), role: role as Role });
+      const newUser = await createUser({
+        name: name.trim(),
+        role: role as Role,
+      });
       setLastCreated(newUser);
       setName("");
       setRole("");
@@ -284,7 +337,11 @@ function CreateUserForm() {
           <Label htmlFor="role" className="text-sm font-medium text-foreground">
             Role
           </Label>
-          <Select value={role} onValueChange={(v) => setRole(v as Role)} disabled={isPending}>
+          <Select
+            value={role}
+            onValueChange={(v) => setRole(v as Role)}
+            disabled={isPending}
+          >
             <SelectTrigger id="role" className="bg-background w-full">
               <SelectValue placeholder="Select a role" />
             </SelectTrigger>
@@ -343,9 +400,13 @@ function CreateUserForm() {
               <div className="text-sm">
                 <p className="font-medium text-foreground">Last created</p>
                 <p className="text-muted-foreground">
-                  <span className="font-medium text-foreground">{lastCreated.name}</span>
+                  <span className="font-medium text-foreground">
+                    {lastCreated.name}
+                  </span>
                   {" · "}
-                  <span className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-xs border ${ROLE_CONFIG[lastCreated.role].className}`}>
+                  <span
+                    className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-xs border ${ROLE_CONFIG[lastCreated.role].className}`}
+                  >
                     {ROLE_CONFIG[lastCreated.role].label}
                   </span>
                   {" · "}ID #{String(lastCreated.id).padStart(4, "0")}
@@ -399,7 +460,9 @@ function UsersList() {
           className="text-center py-10 space-y-1"
         >
           <p className="text-muted-foreground text-sm">No users yet.</p>
-          <p className="text-muted-foreground/60 text-xs">Create one using the form above.</p>
+          <p className="text-muted-foreground/60 text-xs">
+            Create one using the form above.
+          </p>
         </motion.div>
       )}
 
@@ -425,7 +488,8 @@ function TechnicianCard({
   index: number;
   isAdmin: boolean;
 }) {
-  const { mutateAsync: deactivateTechnician, isPending: isDeactivating } = useDeactivateTechnician();
+  const { mutateAsync: deactivateTechnician, isPending: isDeactivating } =
+    useDeactivateTechnician();
 
   const handleDeactivate = async () => {
     try {
@@ -453,7 +517,8 @@ function TechnicianCard({
           {tech.phone}
         </p>
         <p className="text-xs text-muted-foreground mt-0.5">
-          Assigned: {String(tech.totalAssigned)} | Completed: {String(tech.totalCompleted)}
+          Assigned: {String(tech.totalAssigned)} | Completed:{" "}
+          {String(tech.totalCompleted)}
         </p>
       </div>
       <span className="text-xs text-muted-foreground font-mono hidden sm:block">
@@ -501,7 +566,10 @@ function TechnicianManagement() {
     e.preventDefault();
     if (!name.trim() || !phone.trim()) return;
     try {
-      const tech = await createTechnician({ name: name.trim(), phone: phone.trim() });
+      const tech = await createTechnician({
+        name: name.trim(),
+        phone: phone.trim(),
+      });
       toast.success(`Technician "${tech.name}" added successfully`);
       setName("");
       setPhone("");
@@ -515,7 +583,10 @@ function TechnicianManagement() {
       <form onSubmit={handleSubmit} className="space-y-4">
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div className="space-y-1.5">
-            <Label htmlFor="tech-name" className="text-sm font-medium text-foreground">
+            <Label
+              htmlFor="tech-name"
+              className="text-sm font-medium text-foreground"
+            >
               Full Name
             </Label>
             <Input
@@ -529,7 +600,10 @@ function TechnicianManagement() {
             />
           </div>
           <div className="space-y-1.5">
-            <Label htmlFor="tech-phone" className="text-sm font-medium text-foreground">
+            <Label
+              htmlFor="tech-phone"
+              className="text-sm font-medium text-foreground"
+            >
               Phone Number
             </Label>
             <Input
@@ -567,32 +641,44 @@ function TechnicianManagement() {
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <Wrench className="w-4 h-4 text-muted-foreground" />
-            <h3 className="font-medium text-foreground text-sm">Technician List</h3>
+            <h3 className="font-medium text-foreground text-sm">
+              Technician List
+            </h3>
           </div>
           {!isLoading && technicians && (
             <span className="text-xs text-muted-foreground bg-muted px-2 py-0.5 rounded-full">
-              {technicians.length} {technicians.length === 1 ? "technician" : "technicians"}
+              {technicians.length}{" "}
+              {technicians.length === 1 ? "technician" : "technicians"}
             </span>
           )}
         </div>
 
         {isLoading && (
           <div className="space-y-2">
-            {[0, 1].map((i) => <UserSkeleton key={i} />)}
+            {[0, 1].map((i) => (
+              <UserSkeleton key={i} />
+            ))}
           </div>
         )}
 
         {!isLoading && technicians && technicians.length === 0 && (
           <div className="text-center py-8 space-y-1">
             <p className="text-muted-foreground text-sm">No technicians yet.</p>
-            <p className="text-muted-foreground/60 text-xs">Add one using the form above.</p>
+            <p className="text-muted-foreground/60 text-xs">
+              Add one using the form above.
+            </p>
           </div>
         )}
 
         {!isLoading && technicians && technicians.length > 0 && (
           <div className="space-y-2">
             {technicians.map((tech, i) => (
-              <TechnicianCard key={String(tech.id)} tech={tech} index={i} isAdmin={true} />
+              <TechnicianCard
+                key={String(tech.id)}
+                tech={tech}
+                index={i}
+                isAdmin={true}
+              />
             ))}
           </div>
         )}
@@ -604,59 +690,17 @@ function TechnicianManagement() {
 /* ─── Booking Form ───────────────────────────────────────────── */
 
 const TIME_SLOTS = [
-  "9:00 AM", "10:00 AM", "11:00 AM", "12:00 PM",
-  "1:00 PM", "2:00 PM", "3:00 PM", "4:00 PM", "5:00 PM", "6:00 PM",
+  "9:00 AM",
+  "10:00 AM",
+  "11:00 AM",
+  "12:00 PM",
+  "1:00 PM",
+  "2:00 PM",
+  "3:00 PM",
+  "4:00 PM",
+  "5:00 PM",
+  "6:00 PM",
 ];
-
-const DEFAULT_SERVICES = [
-  { id: "1", name: "Plumbing" },
-  { id: "2", name: "Electrical" },
-  { id: "3", name: "Deep Cleaning" },
-  { id: "4", name: "Painting" },
-  { id: "5", name: "AC Service" },
-  { id: "6", name: "Pest Control" },
-  { id: "7", name: "Estate Maintenance" },
-];
-
-const DEFAULT_SUB_SERVICES = [
-  { id: "1", serviceId: "1", name: "Leak Fix" },
-  { id: "2", serviceId: "1", name: "Pipe Installation" },
-  { id: "3", serviceId: "2", name: "Wiring" },
-  { id: "4", serviceId: "2", name: "Switch Board Repair" },
-  { id: "5", serviceId: "3", name: "Home Deep Cleaning" },
-  { id: "6", serviceId: "3", name: "Apartment Deep Cleaning" },
-  { id: "7", serviceId: "4", name: "Interior Painting" },
-  { id: "8", serviceId: "4", name: "Exterior Painting" },
-  { id: "9", serviceId: "5", name: "AC General Service" },
-  { id: "10", serviceId: "5", name: "AC Gas Refill" },
-  { id: "11", serviceId: "6", name: "Termite Treatment" },
-  { id: "12", serviceId: "6", name: "General Pest Control" },
-  { id: "13", serviceId: "7", name: "Garden Maintenance" },
-  { id: "14", serviceId: "7", name: "Full Estate Management" },
-];
-
-interface LocalService { id: string; name: string; }
-interface LocalSubService { id: string; serviceId: string; name: string; }
-
-function getLocalServices(): LocalService[] {
-  try {
-    const stored = JSON.parse(localStorage.getItem("services") || "[]");
-    if (Array.isArray(stored) && stored.length > 0) return stored;
-  } catch { /* ignore */ }
-  // Seed defaults
-  localStorage.setItem("services", JSON.stringify(DEFAULT_SERVICES));
-  return DEFAULT_SERVICES;
-}
-
-function getLocalSubServices(): LocalSubService[] {
-  try {
-    const stored = JSON.parse(localStorage.getItem("subServices") || "[]");
-    if (Array.isArray(stored) && stored.length > 0) return stored;
-  } catch { /* ignore */ }
-  // Seed defaults
-  localStorage.setItem("subServices", JSON.stringify(DEFAULT_SUB_SERVICES));
-  return DEFAULT_SUB_SERVICES;
-}
 
 function BookingForm() {
   const [serviceId, setServiceId] = useState<string>("");
@@ -666,16 +710,29 @@ function BookingForm() {
   const [scheduledTime, setScheduledTime] = useState<string>("");
   const [address, setAddress] = useState<string>("");
   const [notes, setNotes] = useState<string>("");
+  const [whatsappMsg, setWhatsappMsg] = useState<string | null>(null);
+  const [copied, setCopied] = useState(false);
 
-  // Load from localStorage on mount (with seed fallback)
-  const [services] = useState<LocalService[]>(() => getLocalServices());
-  const [allSubServices] = useState<LocalSubService[]>(() => getLocalSubServices());
-
-  console.log("Services:", services);
-
-  const filteredSubServices = allSubServices.filter(
-    (sub) => sub.serviceId === serviceId
+  // Static in-memory catalog — no localStorage, no seeding
+  const filteredSubServices = SUB_SERVICES.filter(
+    (sub) => sub.serviceId === serviceId,
   );
+
+  const selectedSubService = filteredSubServices.find(
+    (ss) => ss.id === subServiceId,
+  );
+  const qty = Number(quantity) || 1;
+  let computedTotal = 0;
+  if (selectedSubService) {
+    if (selectedSubService.pricingType === "fixed") {
+      computedTotal = selectedSubService.price;
+    } else {
+      computedTotal = selectedSubService.price * qty;
+    }
+    if (computedTotal < 1000) computedTotal = 1000;
+  }
+  const computedAdvance = Math.round(computedTotal * 0.3);
+  const computedBalance = computedTotal - computedAdvance;
 
   const { mutateAsync: createBooking, isPending } = useCreateBooking();
   const queryClient = useQueryClient();
@@ -691,8 +748,8 @@ function BookingForm() {
       toast.error("Please select a sub-service.");
       return;
     }
-    const qty = Number(quantity);
-    if (!quantity || isNaN(qty) || qty <= 0) {
+    const qtyNum = Number(quantity);
+    if (!quantity || Number.isNaN(qtyNum) || qtyNum <= 0) {
       toast.error("Please enter a valid quantity (must be greater than 0).");
       return;
     }
@@ -710,11 +767,18 @@ function BookingForm() {
     }
 
     try {
+      // subServiceId is a string key (e.g. "plumbing_leak_fix") used for local
+      // filtering only; the backend expects a numeric bigint. Parse it if it is a
+      // pure integer string (legacy), otherwise fall back to 0n.
+      const numericSubServiceId = /^\d+$/.test(subServiceId)
+        ? BigInt(subServiceId)
+        : 0n;
+
       const booking = await createBooking({
         customerId: 0n,
-        subServiceId: BigInt(subServiceId),
+        subServiceId: numericSubServiceId,
         propertyType: "Apartment",
-        quantity: BigInt(qty),
+        quantity: BigInt(qtyNum),
         scheduledDate,
         scheduledTime,
         address: address.trim(),
@@ -723,9 +787,18 @@ function BookingForm() {
 
       console.log("Booking saved:", booking);
 
-      await queryClient.refetchQueries({ queryKey: ["bookings"], type: "active" });
+      await queryClient.refetchQueries({
+        queryKey: ["bookings"],
+        type: "active",
+      });
 
-      const subServiceName = filteredSubServices.find(ss => ss.id === subServiceId)?.name ?? "Service";
+      const selectedSubSvc = filteredSubServices.find(
+        (ss) => ss.id === subServiceId,
+      );
+      const subServiceName = selectedSubSvc?.name ?? "Service";
+      const serviceName =
+        SERVICES.find((s) => s.id === serviceId)?.name ?? serviceId;
+
       sendWhatsAppNotification("confirmed", {
         to: "+91XXXXXXXXXX",
         bookingId: booking.id,
@@ -733,8 +806,11 @@ function BookingForm() {
         date: scheduledDate,
       });
 
+      const waMsg = `*New Booking – Indu Home & Estate Services*\n\nCustomer Name: Guest\nService: ${serviceName}\nSub-Service: ${subServiceName}\nDate: ${scheduledDate} at ${scheduledTime}\nAddress: ${address.trim()}\nTotal: ₹${Number(booking.totalAmount).toLocaleString("en-IN")}\nAdvance: ₹${Number(booking.advanceAmount).toLocaleString("en-IN")}\nBalance: ₹${Number(booking.balanceAmount).toLocaleString("en-IN")}\nPayment Status: Unpaid\n\nBooking ID: #${String(booking.id).padStart(4, "0")}`;
+      setWhatsappMsg(waMsg);
+
       console.log("Booking Created:", booking);
-      alert("Booking Created Successfully");
+      toast.success("Booking Created Successfully");
       setServiceId("");
       setSubServiceId("");
       setQuantity("");
@@ -747,11 +823,27 @@ function BookingForm() {
     }
   };
 
+  const handleCopyWhatsApp = async () => {
+    if (!whatsappMsg) return;
+    try {
+      await navigator.clipboard.writeText(whatsappMsg);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      toast.error("Failed to copy to clipboard.");
+    }
+  };
+
   return (
     <div className="space-y-4">
-      {/* Service dropdown — native select for reliable interactivity */}
+      {/* Service dropdown — static in-memory catalog */}
       <div className="space-y-1.5">
-        <Label htmlFor="service" className="text-sm font-medium text-foreground">Service</Label>
+        <Label
+          htmlFor="service"
+          className="text-sm font-medium text-foreground"
+        >
+          Service
+        </Label>
         <select
           id="service"
           value={serviceId}
@@ -762,7 +854,7 @@ function BookingForm() {
           className="w-full h-10 rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
         >
           <option value="">Select a service</option>
-          {services.map((service) => (
+          {SERVICES.map((service) => (
             <option key={service.id} value={service.id}>
               {service.name}
             </option>
@@ -772,14 +864,21 @@ function BookingForm() {
 
       {/* SubService dropdown — native select, filtered by selected service */}
       <div className="space-y-1.5">
-        <Label htmlFor="subservice" className="text-sm font-medium text-foreground">Sub-Service</Label>
+        <Label
+          htmlFor="subservice"
+          className="text-sm font-medium text-foreground"
+        >
+          Sub-Service
+        </Label>
         <select
           id="subservice"
           value={subServiceId}
           onChange={(e) => setSubServiceId(e.target.value)}
           className="w-full h-10 rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
         >
-          <option value="">{serviceId ? "Select a sub-service" : "Select a service first"}</option>
+          <option value="">
+            {serviceId ? "Select a sub-service" : "Select a service first"}
+          </option>
           {filteredSubServices.map((sub) => (
             <option key={sub.id} value={sub.id}>
               {sub.name}
@@ -788,9 +887,76 @@ function BookingForm() {
         </select>
       </div>
 
+      {/* Pricing Preview Card — shown when a sub-service is selected */}
+      <AnimatePresence>
+        {selectedSubService && (
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: "auto" }}
+            exit={{ opacity: 0, height: 0 }}
+            transition={{ duration: 0.2 }}
+            className="overflow-hidden"
+          >
+            <div className="rounded-md border border-border bg-muted/50 px-4 py-3 space-y-1.5 text-sm">
+              <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-2">
+                Price Estimate
+              </p>
+              <div className="flex items-center justify-between">
+                <span className="text-muted-foreground">Base Price</span>
+                <span className="text-foreground font-medium">
+                  ₹{selectedSubService.price.toLocaleString("en-IN")}
+                  {selectedSubService.pricingType !== "fixed" && (
+                    <span className="text-muted-foreground font-normal text-xs ml-1">
+                      per{" "}
+                      {selectedSubService.pricingType === "per_sqft"
+                        ? "sq ft"
+                        : "acre"}
+                    </span>
+                  )}
+                </span>
+              </div>
+              <div className="flex items-center justify-between border-t border-border/60 pt-1.5 mt-1.5">
+                <span className="text-muted-foreground font-medium">
+                  Total Amount
+                </span>
+                <span className="text-foreground font-semibold">
+                  ₹{computedTotal.toLocaleString("en-IN")}
+                </span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-muted-foreground">Advance (30%)</span>
+                <span className="text-emerald-700 font-medium">
+                  ₹{computedAdvance.toLocaleString("en-IN")}
+                </span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-muted-foreground">Balance (70%)</span>
+                <span className="text-amber-700 font-medium">
+                  ₹{computedBalance.toLocaleString("en-IN")}
+                </span>
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {/* Quantity input */}
       <div className="space-y-1.5">
-        <Label htmlFor="quantity" className="text-sm font-medium text-foreground">Quantity</Label>
+        <Label
+          htmlFor="quantity"
+          className="text-sm font-medium text-foreground"
+        >
+          Quantity
+          {selectedSubService && selectedSubService.pricingType !== "fixed" && (
+            <span className="text-xs text-muted-foreground font-normal ml-1">
+              (
+              {selectedSubService.pricingType === "per_sqft"
+                ? "sq ft"
+                : "acres"}
+              )
+            </span>
+          )}
+        </Label>
         <Input
           id="quantity"
           type="number"
@@ -806,7 +972,10 @@ function BookingForm() {
 
       {/* Scheduled Date */}
       <div className="space-y-1.5">
-        <Label htmlFor="scheduledDate" className="text-sm font-medium text-foreground flex items-center gap-1.5">
+        <Label
+          htmlFor="scheduledDate"
+          className="text-sm font-medium text-foreground flex items-center gap-1.5"
+        >
           <CalendarDays className="w-3.5 h-3.5 text-muted-foreground" />
           Scheduled Date
         </Label>
@@ -824,7 +993,10 @@ function BookingForm() {
 
       {/* Time Slot — native select */}
       <div className="space-y-1.5">
-        <Label htmlFor="timeSlot" className="text-sm font-medium text-foreground flex items-center gap-1.5">
+        <Label
+          htmlFor="timeSlot"
+          className="text-sm font-medium text-foreground flex items-center gap-1.5"
+        >
           <Clock className="w-3.5 h-3.5 text-muted-foreground" />
           Time Slot
         </Label>
@@ -836,14 +1008,19 @@ function BookingForm() {
         >
           <option value="">Select a time slot</option>
           {TIME_SLOTS.map((slot) => (
-            <option key={slot} value={slot}>{slot}</option>
+            <option key={slot} value={slot}>
+              {slot}
+            </option>
           ))}
         </select>
       </div>
 
       {/* Address */}
       <div className="space-y-1.5">
-        <Label htmlFor="address" className="text-sm font-medium text-foreground flex items-center gap-1.5">
+        <Label
+          htmlFor="address"
+          className="text-sm font-medium text-foreground flex items-center gap-1.5"
+        >
           <MapPin className="w-3.5 h-3.5 text-muted-foreground" />
           Service Address <span className="text-red-500 ml-0.5">*</span>
         </Label>
@@ -861,9 +1038,15 @@ function BookingForm() {
 
       {/* Notes */}
       <div className="space-y-1.5">
-        <Label htmlFor="notes" className="text-sm font-medium text-foreground flex items-center gap-1.5">
+        <Label
+          htmlFor="notes"
+          className="text-sm font-medium text-foreground flex items-center gap-1.5"
+        >
           <StickyNote className="w-3.5 h-3.5 text-muted-foreground" />
-          Notes <span className="text-xs text-muted-foreground font-normal">(optional)</span>
+          Notes{" "}
+          <span className="text-xs text-muted-foreground font-normal">
+            (optional)
+          </span>
         </Label>
         <Textarea
           id="notes"
@@ -891,25 +1074,104 @@ function BookingForm() {
           "Create Booking"
         )}
       </Button>
+
+      {/* WhatsApp Preview Panel */}
+      <AnimatePresence>
+        {whatsappMsg && (
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: "auto" }}
+            exit={{ opacity: 0, height: 0 }}
+            transition={{ duration: 0.25 }}
+            className="overflow-hidden"
+          >
+            <div className="rounded-md border border-emerald-200 bg-emerald-50 p-4 space-y-3">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <MessageSquare className="w-4 h-4 text-emerald-700" />
+                  <p className="text-sm font-medium text-emerald-800">
+                    WhatsApp Message Ready
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setWhatsappMsg(null)}
+                  className="text-emerald-600 hover:text-emerald-800 text-xs underline underline-offset-2"
+                >
+                  Dismiss
+                </button>
+              </div>
+              <pre className="text-xs text-emerald-900 bg-white border border-emerald-100 rounded p-3 whitespace-pre-wrap font-sans leading-relaxed overflow-x-auto">
+                {whatsappMsg}
+              </pre>
+              <Button
+                type="button"
+                size="sm"
+                variant="outline"
+                className="border-emerald-300 text-emerald-800 hover:bg-emerald-100 w-full"
+                onClick={handleCopyWhatsApp}
+              >
+                {copied ? (
+                  <>
+                    <CheckCheck className="mr-2 h-3.5 w-3.5 text-emerald-600" />
+                    Copied!
+                  </>
+                ) : (
+                  <>
+                    <Copy className="mr-2 h-3.5 w-3.5" />
+                    Copy Message
+                  </>
+                )}
+              </Button>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
 
 /* ─── Status Badge ───────────────────────────────────────────── */
 
-const STATUS_CONFIG: Record<BookingStatus, { label: string; className: string }> = {
-  [BookingStatus.pending]:    { label: "Pending",     className: "bg-amber-50 text-amber-700 border-amber-200" },
-  [BookingStatus.confirmed]:  { label: "Confirmed",   className: "bg-blue-50 text-blue-700 border-blue-200" },
-  [BookingStatus.assigned]:   { label: "Assigned",    className: "bg-orange-50 text-orange-700 border-orange-200" },
-  [BookingStatus.inProgress]: { label: "In Progress", className: "bg-orange-50 text-orange-700 border-orange-200" },
-  [BookingStatus.completed]:  { label: "Completed",   className: "bg-emerald-50 text-emerald-700 border-emerald-200" },
-  [BookingStatus.cancelled]:  { label: "Cancelled",   className: "bg-red-50 text-red-700 border-red-200" },
+const STATUS_CONFIG: Record<
+  BookingStatus,
+  { label: string; className: string }
+> = {
+  [BookingStatus.pending]: {
+    label: "Pending",
+    className: "bg-amber-50 text-amber-700 border-amber-200",
+  },
+  [BookingStatus.confirmed]: {
+    label: "Confirmed",
+    className: "bg-blue-50 text-blue-700 border-blue-200",
+  },
+  [BookingStatus.assigned]: {
+    label: "Assigned",
+    className: "bg-orange-50 text-orange-700 border-orange-200",
+  },
+  [BookingStatus.inProgress]: {
+    label: "In Progress",
+    className: "bg-orange-50 text-orange-700 border-orange-200",
+  },
+  [BookingStatus.completed]: {
+    label: "Completed",
+    className: "bg-emerald-50 text-emerald-700 border-emerald-200",
+  },
+  [BookingStatus.cancelled]: {
+    label: "Cancelled",
+    className: "bg-red-50 text-red-700 border-red-200",
+  },
 };
 
 function StatusBadge({ status }: { status: BookingStatus }) {
-  const cfg = STATUS_CONFIG[status] ?? { label: status, className: "bg-muted text-muted-foreground border-border" };
+  const cfg = STATUS_CONFIG[status] ?? {
+    label: status,
+    className: "bg-muted text-muted-foreground border-border",
+  };
   return (
-    <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium border ${cfg.className}`}>
+    <span
+      className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium border ${cfg.className}`}
+    >
       {cfg.label}
     </span>
   );
@@ -919,13 +1181,27 @@ function StatusBadge({ status }: { status: BookingStatus }) {
 
 function PaymentBadge({ paymentStatus }: { paymentStatus: string }) {
   const cfg: Record<string, { label: string; className: string }> = {
-    unpaid:  { label: "Unpaid",   className: "bg-red-50 text-red-700 border-red-200" },
-    partial: { label: "Partial",  className: "bg-amber-50 text-amber-700 border-amber-200" },
-    paid:    { label: "Paid",     className: "bg-emerald-50 text-emerald-700 border-emerald-200" },
+    unpaid: {
+      label: "Unpaid",
+      className: "bg-red-50 text-red-700 border-red-200",
+    },
+    partial: {
+      label: "Partial",
+      className: "bg-amber-50 text-amber-700 border-amber-200",
+    },
+    paid: {
+      label: "Paid",
+      className: "bg-emerald-50 text-emerald-700 border-emerald-200",
+    },
   };
-  const entry = cfg[paymentStatus] ?? { label: paymentStatus, className: "bg-muted text-muted-foreground border-border" };
+  const entry = cfg[paymentStatus] ?? {
+    label: paymentStatus,
+    className: "bg-muted text-muted-foreground border-border",
+  };
   return (
-    <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium border ${entry.className}`}>
+    <span
+      className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium border ${entry.className}`}
+    >
       <CreditCard className="w-3 h-3" />
       {entry.label}
     </span>
@@ -936,10 +1212,10 @@ function PaymentBadge({ paymentStatus }: { paymentStatus: string }) {
 
 function StatusTimeline({ status }: { status: BookingStatus }) {
   const steps: { key: BookingStatus; label: string }[] = [
-    { key: BookingStatus.pending,    label: "Pending" },
-    { key: BookingStatus.assigned,   label: "Assigned" },
+    { key: BookingStatus.pending, label: "Pending" },
+    { key: BookingStatus.assigned, label: "Assigned" },
     { key: BookingStatus.inProgress, label: "In Progress" },
-    { key: BookingStatus.completed,  label: "Completed" },
+    { key: BookingStatus.completed, label: "Completed" },
   ];
 
   if (status === BookingStatus.cancelled) {
@@ -962,24 +1238,30 @@ function StatusTimeline({ status }: { status: BookingStatus }) {
         const isCurrent = i === effectiveIndex;
         return (
           <div key={step.key} className="flex items-center gap-1">
-            <div className={`w-2.5 h-2.5 rounded-full border ${
-              isCurrent
-                ? "bg-primary border-primary"
-                : isPast
-                  ? "bg-emerald-500 border-emerald-500"
-                  : "bg-background border-muted-foreground/30"
-            }`} />
-            <span className={`text-xs ${
-              isCurrent
-                ? "text-primary font-medium"
-                : isPast
-                  ? "text-muted-foreground"
-                  : "text-muted-foreground/50"
-            }`}>
+            <div
+              className={`w-2.5 h-2.5 rounded-full border ${
+                isCurrent
+                  ? "bg-primary border-primary"
+                  : isPast
+                    ? "bg-emerald-500 border-emerald-500"
+                    : "bg-background border-muted-foreground/30"
+              }`}
+            />
+            <span
+              className={`text-xs ${
+                isCurrent
+                  ? "text-primary font-medium"
+                  : isPast
+                    ? "text-muted-foreground"
+                    : "text-muted-foreground/50"
+              }`}
+            >
               {step.label}
             </span>
             {i < steps.length - 1 && (
-              <span className={`text-xs mx-0.5 ${isPast && i < effectiveIndex ? "text-muted-foreground" : "text-muted-foreground/30"}`}>
+              <span
+                className={`text-xs mx-0.5 ${isPast && i < effectiveIndex ? "text-muted-foreground" : "text-muted-foreground/30"}`}
+              >
                 →
               </span>
             )}
@@ -1002,13 +1284,27 @@ function InvoiceModal({
   const { data: invoice, isLoading } = useGenerateInvoice(bookingId);
 
   const paymentCfg: Record<string, { label: string; className: string }> = {
-    unpaid:  { label: "Unpaid",  className: "bg-red-50 text-red-700 border-red-200" },
-    partial: { label: "Partial", className: "bg-amber-50 text-amber-700 border-amber-200" },
-    paid:    { label: "Paid",    className: "bg-emerald-50 text-emerald-700 border-emerald-200" },
+    unpaid: {
+      label: "Unpaid",
+      className: "bg-red-50 text-red-700 border-red-200",
+    },
+    partial: {
+      label: "Partial",
+      className: "bg-amber-50 text-amber-700 border-amber-200",
+    },
+    paid: {
+      label: "Paid",
+      className: "bg-emerald-50 text-emerald-700 border-emerald-200",
+    },
   };
 
   return (
-    <Dialog open={bookingId !== null} onOpenChange={(open) => { if (!open) onClose(); }}>
+    <Dialog
+      open={bookingId !== null}
+      onOpenChange={(open) => {
+        if (!open) onClose();
+      }}
+    >
       <DialogContent className="max-w-md print:shadow-none print:border-none">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
@@ -1039,7 +1335,9 @@ function InvoiceModal({
               <p className="font-display font-semibold text-foreground text-base">
                 Indu Home &amp; Estate Services
               </p>
-              <p className="text-xs text-muted-foreground">Chikmagalur, Karnataka, India</p>
+              <p className="text-xs text-muted-foreground">
+                Chikmagalur, Karnataka, India
+              </p>
               <p className="text-xs text-muted-foreground mt-1 font-mono">
                 Booking #{String(invoice.bookingId).padStart(4, "0")}
               </p>
@@ -1049,28 +1347,39 @@ function InvoiceModal({
             <div className="py-3 border-b border-border space-y-1.5">
               <div className="grid grid-cols-2 gap-1 text-sm">
                 <span className="text-muted-foreground">Service</span>
-                <span className="text-foreground font-medium text-right">{invoice.serviceName}</span>
+                <span className="text-foreground font-medium text-right">
+                  {invoice.serviceName}
+                </span>
               </div>
               <div className="grid grid-cols-2 gap-1 text-sm">
                 <span className="text-muted-foreground">Sub-Service</span>
-                <span className="text-foreground font-medium text-right">{invoice.subServiceName}</span>
+                <span className="text-foreground font-medium text-right">
+                  {invoice.subServiceName}
+                </span>
               </div>
               <div className="grid grid-cols-2 gap-1 text-sm">
                 <span className="text-muted-foreground">Quantity</span>
-                <span className="text-foreground font-medium text-right">{String(invoice.quantity)}</span>
+                <span className="text-foreground font-medium text-right">
+                  {String(invoice.quantity)}
+                </span>
               </div>
               {invoice.scheduledDate && (
                 <div className="grid grid-cols-2 gap-1 text-sm">
                   <span className="text-muted-foreground">Scheduled</span>
                   <span className="text-foreground font-medium text-right">
-                    {invoice.scheduledDate}{invoice.scheduledTime ? ` at ${invoice.scheduledTime}` : ""}
+                    {invoice.scheduledDate}
+                    {invoice.scheduledTime
+                      ? ` at ${invoice.scheduledTime}`
+                      : ""}
                   </span>
                 </div>
               )}
               {invoice.address && (
                 <div className="grid grid-cols-2 gap-1 text-sm">
                   <span className="text-muted-foreground">Address</span>
-                  <span className="text-foreground font-medium text-right text-xs leading-snug">{invoice.address}</span>
+                  <span className="text-foreground font-medium text-right text-xs leading-snug">
+                    {invoice.address}
+                  </span>
                 </div>
               )}
             </div>
@@ -1090,7 +1399,9 @@ function InvoiceModal({
                 </span>
               </div>
               <div className="grid grid-cols-2 gap-1 text-sm border-t border-border pt-1.5 mt-1">
-                <span className="text-muted-foreground font-medium">Balance Due</span>
+                <span className="text-muted-foreground font-medium">
+                  Balance Due
+                </span>
                 <span className="text-foreground font-semibold text-right">
                   ₹{invoice.balanceAmount.toLocaleString("en-IN")}
                 </span>
@@ -1104,10 +1415,19 @@ function InvoiceModal({
               <div className="grid grid-cols-2 gap-1 text-sm items-center">
                 <span className="text-muted-foreground">Payment Status</span>
                 <div className="flex justify-end">
-                  <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium border ${
-                    (paymentCfg[invoice.paymentStatus] ?? paymentCfg.unpaid).className
-                  }`}>
-                    {(paymentCfg[invoice.paymentStatus] ?? { label: invoice.paymentStatus }).label}
+                  <span
+                    className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium border ${
+                      (paymentCfg[invoice.paymentStatus] ?? paymentCfg.unpaid)
+                        .className
+                    }`}
+                  >
+                    {
+                      (
+                        paymentCfg[invoice.paymentStatus] ?? {
+                          label: invoice.paymentStatus,
+                        }
+                      ).label
+                    }
                   </span>
                 </div>
               </div>
@@ -1124,11 +1444,7 @@ function InvoiceModal({
                 <FileText className="mr-1.5 h-3.5 w-3.5" />
                 Download Invoice
               </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={onClose}
-              >
+              <Button variant="outline" size="sm" onClick={onClose}>
                 <XCircle className="mr-1.5 h-3.5 w-3.5" />
                 Close
               </Button>
@@ -1144,28 +1460,19 @@ function InvoiceModal({
 
 function DashboardCards() {
   const { data: bookings, isLoading } = useGetBookings();
-  const { data: services } = useGetServices();
 
-  const uniqueServiceIds = useMemo(() => (services ?? []).map((s) => s.id), [services]);
-  const subServiceResults = useGetAllSubServices(uniqueServiceIds);
-
-  // Build subServiceId → serviceId map
+  // Static maps from in-memory catalog constants
   const subServiceToServiceMap = useMemo(() => {
     const map = new Map<string, string>();
-    for (const result of subServiceResults) {
-      for (const ss of result.data ?? []) {
-        map.set(ss.id.toString(), ss.serviceId.toString());
-      }
-    }
+    for (const ss of SUB_SERVICES) map.set(ss.id, ss.serviceId);
     return map;
-  }, [subServiceResults]);
+  }, []);
 
-  // Build serviceId → serviceName map
   const serviceMap = useMemo(() => {
     const map = new Map<string, string>();
-    for (const s of services ?? []) map.set(s.id.toString(), s.name);
+    for (const s of SERVICES) map.set(s.id, s.name);
     return map;
-  }, [services]);
+  }, []);
 
   // Today's date midnight
   const todayStart = useMemo(() => {
@@ -1190,18 +1497,31 @@ function DashboardCards() {
       };
     }
     return {
-      totalBookings:     list.length,
-      totalRevenue:      list.reduce((sum, b) => sum + (b.totalAmount ?? 0n), 0n),
-      totalAdvance:      list.reduce((sum, b) => {
+      totalBookings: list.length,
+      totalRevenue: list.reduce(
+        (sum, b) =>
+          b.paymentStatus === "paid" ? sum + (b.totalAmount ?? 0n) : sum,
+        0n,
+      ),
+      totalAdvance: list.reduce((sum, b) => {
         const ps = b.paymentStatus ?? "unpaid";
-        return ps === "partial" || ps === "paid" ? sum + (b.advanceAmount ?? 0n) : sum;
+        return ps === "partial" || ps === "paid"
+          ? sum + (b.advanceAmount ?? 0n)
+          : sum;
       }, 0n),
-      totalCommission:   list.reduce((sum, b) => sum + (b.commission ?? 0n), 0n),
-      pendingPayments:   list.filter((b) => (b.paymentStatus ?? "unpaid") === "unpaid").length,
-      assignedBookings:  list.filter((b) => b.status === BookingStatus.assigned).length,
-      completedBookings: list.filter((b) => b.status === BookingStatus.completed).length,
-      cancelledBookings: list.filter((b) => b.status === BookingStatus.cancelled).length,
-      todayBookings:     list.filter((b) => {
+      totalCommission: list.reduce((sum, b) => sum + (b.commission ?? 0n), 0n),
+      pendingPayments: list.filter(
+        (b) => (b.paymentStatus ?? "unpaid") === "unpaid",
+      ).length,
+      assignedBookings: list.filter((b) => b.status === BookingStatus.assigned)
+        .length,
+      completedBookings: list.filter(
+        (b) => b.status === BookingStatus.completed,
+      ).length,
+      cancelledBookings: list.filter(
+        (b) => b.status === BookingStatus.cancelled,
+      ).length,
+      todayBookings: list.filter((b) => {
         const ms = Number(b.createdAt / 1_000_000n);
         return ms >= todayStart;
       }).length,
@@ -1210,9 +1530,13 @@ function DashboardCards() {
 
   // Bookings per service chart data
   const serviceBookingCounts = useMemo(() => {
-    if (!bookings || !services) return [];
+    if (!bookings) return [];
     const countMap = new Map<string, number>();
     for (const b of bookings) {
+      // subServiceId is stored as a bigint in the backend; the static map uses string IDs.
+      // Since the booking form passes subServiceId = 0n, look up the notes field fallback.
+      // For now we skip unresolved entries gracefully and suppress the chart until
+      // a future version stores the sub-service string ID in the backend.
       const serviceId = subServiceToServiceMap.get(b.subServiceId.toString());
       if (!serviceId) continue;
       const serviceName = serviceMap.get(serviceId) ?? `Service #${serviceId}`;
@@ -1220,8 +1544,12 @@ function DashboardCards() {
     }
     const entries = Array.from(countMap.entries()).sort((a, b) => b[1] - a[1]);
     const maxCount = entries.length > 0 ? entries[0][1] : 1;
-    return entries.map(([name, count]) => ({ name, count, pct: Math.round((count / maxCount) * 100) }));
-  }, [bookings, services, subServiceToServiceMap, serviceMap]);
+    return entries.map(([name, count]) => ({
+      name,
+      count,
+      pct: Math.round((count / maxCount) * 100),
+    }));
+  }, [bookings, subServiceToServiceMap, serviceMap]);
 
   const cards = [
     {
@@ -1233,21 +1561,27 @@ function DashboardCards() {
     },
     {
       label: "Total Revenue",
-      value: isLoading ? null : `₹${stats.totalRevenue.toLocaleString("en-IN")}`,
+      value: isLoading
+        ? null
+        : `₹${stats.totalRevenue.toLocaleString("en-IN")}`,
       icon: TrendingUp,
       iconClass: "text-emerald-700",
       bgClass: "bg-emerald-50",
     },
     {
       label: "Advance Collected",
-      value: isLoading ? null : `₹${stats.totalAdvance.toLocaleString("en-IN")}`,
+      value: isLoading
+        ? null
+        : `₹${stats.totalAdvance.toLocaleString("en-IN")}`,
       icon: Wallet,
       iconClass: "text-blue-700",
       bgClass: "bg-blue-50",
     },
     {
       label: "Commission Earned",
-      value: isLoading ? null : `₹${stats.totalCommission.toLocaleString("en-IN")}`,
+      value: isLoading
+        ? null
+        : `₹${stats.totalCommission.toLocaleString("en-IN")}`,
       icon: BadgePercent,
       iconClass: "text-amber-700",
       bgClass: "bg-amber-50",
@@ -1306,7 +1640,9 @@ function DashboardCards() {
               transition={{ duration: 0.3 }}
               className="rounded-lg border border-border bg-card p-4 flex flex-col gap-3"
             >
-              <div className={`w-8 h-8 rounded-md ${card.bgClass} flex items-center justify-center`}>
+              <div
+                className={`w-8 h-8 rounded-md ${card.bgClass} flex items-center justify-center`}
+              >
                 <Icon className={`w-4 h-4 ${card.iconClass}`} />
               </div>
               <div>
@@ -1317,8 +1653,12 @@ function DashboardCards() {
                   </>
                 ) : (
                   <>
-                    <p className="font-display text-xl font-semibold text-foreground">{card.value}</p>
-                    <p className="text-xs text-muted-foreground mt-0.5">{card.label}</p>
+                    <p className="font-display text-xl font-semibold text-foreground">
+                      {card.value}
+                    </p>
+                    <p className="text-xs text-muted-foreground mt-0.5">
+                      {card.label}
+                    </p>
                   </>
                 )}
               </div>
@@ -1332,14 +1672,20 @@ function DashboardCards() {
         <div className="space-y-3 pt-1">
           <div className="flex items-center gap-2">
             <BarChart2 className="w-4 h-4 text-muted-foreground" />
-            <h3 className="font-medium text-foreground text-sm">Bookings by Service</h3>
+            <h3 className="font-medium text-foreground text-sm">
+              Bookings by Service
+            </h3>
           </div>
           <div className="space-y-2">
             {serviceBookingCounts.map(({ name, count, pct }) => (
               <div key={name} className="space-y-1">
                 <div className="flex items-center justify-between text-xs">
-                  <span className="text-foreground font-medium truncate max-w-[70%]">{name}</span>
-                  <span className="text-muted-foreground ml-2 shrink-0">{count}</span>
+                  <span className="text-foreground font-medium truncate max-w-[70%]">
+                    {name}
+                  </span>
+                  <span className="text-muted-foreground ml-2 shrink-0">
+                    {count}
+                  </span>
                 </div>
                 <div className="h-1.5 bg-muted rounded-full overflow-hidden">
                   <motion.div
@@ -1402,13 +1748,24 @@ function BookingRow({
   technicians,
   onViewInvoice,
 }: BookingRowProps) {
-  const { mutateAsync: updateStatus, isPending: isUpdating } = useUpdateBookingStatus();
-  const { mutateAsync: assignTechnician, isPending: isAssigning } = useAssignTechnician();
-  const { mutateAsync: markPayment, isPending: isMarkingPayment } = useMarkPayment();
+  const { mutateAsync: updateStatus, isPending: isUpdating } =
+    useUpdateBookingStatus();
+  const { mutateAsync: assignTechnician, isPending: isAssigning } =
+    useAssignTechnician();
+  const { mutateAsync: markPayment, isPending: isMarkingPayment } =
+    useMarkPayment();
+  const { mutateAsync: markFullyPaid, isPending: isMarkingFull } =
+    useMarkFullyPaid();
+  const { mutateAsync: cancelBooking, isPending: isCancelling } =
+    useCancelBooking();
 
-  const subServiceName = subServiceMap.get(booking.subServiceId.toString()) ?? `#${booking.subServiceId}`;
+  const subServiceName =
+    subServiceMap.get(booking.subServiceId.toString()) ??
+    `#${booking.subServiceId}`;
   const serviceId = subServiceToServiceMap.get(booking.subServiceId.toString());
-  const serviceName = serviceId ? (serviceMap.get(serviceId) ?? `Service #${serviceId}`) : "—";
+  const serviceName = serviceId
+    ? (serviceMap.get(serviceId) ?? `Service #${serviceId}`)
+    : "—";
 
   const assignedTech = technicians.find((t) => t.id === booking.technicianId);
 
@@ -1418,13 +1775,18 @@ function BookingRow({
   const handleStatusChange = async (newStatus: BookingStatus) => {
     try {
       await updateStatus({ bookingId: booking.id, newStatus });
-      toast.success(`Booking #${booking.id} → ${STATUS_CONFIG[newStatus]?.label ?? newStatus}`);
-      sendWhatsAppNotification(`status updated to ${STATUS_CONFIG[newStatus]?.label ?? newStatus}`, {
-        to: "+91XXXXXXXXXX",
-        bookingId: booking.id,
-        service: subServiceName,
-        date: new Date().toLocaleDateString("en-IN"),
-      });
+      toast.success(
+        `Booking #${booking.id} → ${STATUS_CONFIG[newStatus]?.label ?? newStatus}`,
+      );
+      sendWhatsAppNotification(
+        `status updated to ${STATUS_CONFIG[newStatus]?.label ?? newStatus}`,
+        {
+          to: "+91XXXXXXXXXX",
+          bookingId: booking.id,
+          service: subServiceName,
+          date: new Date().toLocaleDateString("en-IN"),
+        },
+      );
     } catch {
       toast.error("Failed to update booking status.");
     }
@@ -1450,10 +1812,43 @@ function BookingRow({
 
   const handleMarkPayment = async () => {
     try {
-      await markPayment({ bookingId: booking.id, referenceId: `REF-${Date.now()}` });
+      await markPayment({
+        bookingId: booking.id,
+        referenceId: `REF-${Date.now()}`,
+      });
       toast.success(`Advance payment recorded for Booking #${booking.id}`);
     } catch {
       toast.error("Failed to mark payment.");
+    }
+  };
+
+  const handleMarkFullyPaid = async () => {
+    try {
+      await markFullyPaid({ bookingId: booking.id });
+      toast.success(`Booking #${booking.id} marked as fully paid`);
+    } catch {
+      toast.error("Failed to mark fully paid.");
+    }
+  };
+
+  const handleCancelBooking = async () => {
+    try {
+      await cancelBooking({ bookingId: booking.id });
+      toast.success(`Booking #${booking.id} cancelled`);
+    } catch {
+      toast.error("Failed to cancel booking.");
+    }
+  };
+
+  const handleMarkCompleted = async () => {
+    try {
+      await updateStatus({
+        bookingId: booking.id,
+        newStatus: BookingStatus.completed,
+      });
+      toast.success(`Booking #${booking.id} marked as completed`);
+    } catch {
+      toast.error("Failed to mark completed.");
     }
   };
 
@@ -1474,8 +1869,9 @@ function BookingRow({
           <StatusBadge status={booking.status} />
           <PaymentBadge paymentStatus={booking.paymentStatus} />
         </div>
-        {isAdmin && !readOnly && (
-          canTransition ? (
+        {isAdmin &&
+          !readOnly &&
+          (canTransition ? (
             <Select
               value=""
               onValueChange={(v) => handleStatusChange(v as BookingStatus)}
@@ -1493,25 +1889,49 @@ function BookingRow({
               </SelectContent>
             </Select>
           ) : (
-            <span className="text-xs text-muted-foreground italic">No further transitions</span>
-          )
-        )}
+            <span className="text-xs text-muted-foreground italic">
+              No further transitions
+            </span>
+          ))}
       </div>
 
       {/* Row 2: Service & sub-service name */}
       <div className="text-sm text-foreground font-medium">
         {serviceName}
         {subServiceName !== "—" && (
-          <span className="text-muted-foreground font-normal"> · {subServiceName}</span>
+          <span className="text-muted-foreground font-normal">
+            {" "}
+            · {subServiceName}
+          </span>
         )}
       </div>
 
       {/* Row 3: Amounts */}
       <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted-foreground">
-        <span>Qty: <span className="text-foreground font-medium">{String(booking.quantity)}</span></span>
-        <span>Total: <span className="text-foreground font-medium">₹{booking.totalAmount.toLocaleString("en-IN")}</span></span>
-        <span>Advance: <span className="text-foreground font-medium">₹{booking.advanceAmount.toLocaleString("en-IN")}</span></span>
-        <span>Commission: <span className="text-amber-700 font-medium">₹{booking.commission.toLocaleString("en-IN")}</span></span>
+        <span>
+          Qty:{" "}
+          <span className="text-foreground font-medium">
+            {String(booking.quantity)}
+          </span>
+        </span>
+        <span>
+          Total:{" "}
+          <span className="text-foreground font-medium">
+            ₹{booking.totalAmount.toLocaleString("en-IN")}
+          </span>
+        </span>
+        <span>
+          Advance:{" "}
+          <span className="text-foreground font-medium">
+            ₹{booking.advanceAmount.toLocaleString("en-IN")}
+          </span>
+        </span>
+        <span>
+          Commission:{" "}
+          <span className="text-amber-700 font-medium">
+            ₹{booking.commission.toLocaleString("en-IN")}
+          </span>
+        </span>
       </div>
 
       {/* Row 4: Schedule & address */}
@@ -1537,7 +1957,12 @@ function BookingRow({
       {assignedTech && (
         <div className="text-xs text-muted-foreground flex items-center gap-1.5">
           <Wrench className="w-3 h-3 text-emerald-600" />
-          <span>Assigned: <span className="text-foreground font-medium">{assignedTech.name}</span></span>
+          <span>
+            Assigned:{" "}
+            <span className="text-foreground font-medium">
+              {assignedTech.name}
+            </span>
+          </span>
         </div>
       )}
 
@@ -1547,7 +1972,11 @@ function BookingRow({
           {/* Assign Technician dropdown */}
           {technicians.length > 0 && (
             <Select
-              value={booking.technicianId !== undefined ? String(booking.technicianId) : ""}
+              value={
+                booking.technicianId !== undefined
+                  ? String(booking.technicianId)
+                  : ""
+              }
               onValueChange={handleAssignTechnician}
               disabled={isAssigning}
             >
@@ -1565,7 +1994,7 @@ function BookingRow({
           )}
 
           {/* Mark Advance Paid button */}
-          {(booking.paymentStatus === "unpaid" || booking.paymentStatus === "partial") && (
+          {booking.paymentStatus === "unpaid" && (
             <Button
               size="sm"
               variant="outline"
@@ -1581,6 +2010,61 @@ function BookingRow({
               Mark Advance Paid
             </Button>
           )}
+
+          {/* Mark Fully Paid button */}
+          {booking.paymentStatus !== "paid" && (
+            <Button
+              size="sm"
+              variant="outline"
+              className="h-7 text-xs border-green-300 text-green-700 hover:bg-green-50"
+              onClick={handleMarkFullyPaid}
+              disabled={isMarkingFull}
+            >
+              {isMarkingFull ? (
+                <Loader2 className="mr-1 h-3 w-3 animate-spin" />
+              ) : (
+                <CheckCircle2 className="mr-1 h-3 w-3" />
+              )}
+              Mark Fully Paid
+            </Button>
+          )}
+
+          {/* Mark Completed button */}
+          {booking.status === BookingStatus.inProgress && (
+            <Button
+              size="sm"
+              variant="outline"
+              className="h-7 text-xs border-emerald-300 text-emerald-700 hover:bg-emerald-50"
+              onClick={handleMarkCompleted}
+              disabled={isUpdating}
+            >
+              {isUpdating ? (
+                <Loader2 className="mr-1 h-3 w-3 animate-spin" />
+              ) : (
+                <CheckCircle2 className="mr-1 h-3 w-3" />
+              )}
+              Mark Completed
+            </Button>
+          )}
+
+          {/* Cancel Booking button */}
+          {booking.status !== BookingStatus.completed &&
+            booking.status !== BookingStatus.cancelled && (
+              <Button
+                size="sm"
+                variant="outline"
+                className="h-7 text-xs border-red-200 text-red-600 hover:bg-red-50"
+                onClick={handleCancelBooking}
+                disabled={isCancelling}
+              >
+                {isCancelling ? (
+                  <Loader2 className="mr-1 h-3 w-3 animate-spin" />
+                ) : (
+                  <XCircle className="mr-1 h-3 w-3" />
+                )}
+                Cancel Booking
+              </Button>
+            )}
 
           {/* View Invoice button */}
           <Button
@@ -1630,9 +2114,12 @@ function BookingRow({
               Mark Completed
             </Button>
           )}
-          {(booking.status === BookingStatus.completed || booking.status === BookingStatus.cancelled) && (
+          {(booking.status === BookingStatus.completed ||
+            booking.status === BookingStatus.cancelled) && (
             <span className="text-xs text-muted-foreground italic self-center">
-              {booking.status === BookingStatus.completed ? "Job completed" : "Cancelled"}
+              {booking.status === BookingStatus.completed
+                ? "Job completed"
+                : "Cancelled"}
             </span>
           )}
           {/* Invoice for technician view */}
@@ -1676,44 +2163,31 @@ function BookingRow({
 
 function BookingList({ isAdmin }: { isAdmin: boolean }) {
   const [invoiceBookingId, setInvoiceBookingId] = useState<bigint | null>(null);
-  const { data: bookings, isLoading: bookingsLoading, isError } = useGetBookings();
-  const { data: services } = useGetServices();
+  const {
+    data: bookings,
+    isLoading: bookingsLoading,
+    isError,
+  } = useGetBookings();
   const { data: technicians } = useGetTechnicians();
 
-  const uniqueServiceIds = useMemo(() => {
-    if (!services) return [];
-    return services.map((s) => s.id);
-  }, [services]);
-
-  const subServiceResults = useGetAllSubServices(uniqueServiceIds);
-
+  // Static maps from in-memory catalog constants
   const subServiceMap = useMemo(() => {
     const map = new Map<string, string>();
-    for (const result of subServiceResults) {
-      for (const ss of result.data ?? []) {
-        map.set(ss.id.toString(), ss.name);
-      }
-    }
+    for (const ss of SUB_SERVICES) map.set(ss.id, ss.name);
     return map;
-  }, [subServiceResults]);
+  }, []);
 
   const serviceMap = useMemo(() => {
     const map = new Map<string, string>();
-    for (const s of services ?? []) {
-      map.set(s.id.toString(), s.name);
-    }
+    for (const s of SERVICES) map.set(s.id, s.name);
     return map;
-  }, [services]);
+  }, []);
 
   const subServiceToServiceMap = useMemo(() => {
     const map = new Map<string, string>();
-    for (const result of subServiceResults) {
-      for (const ss of result.data ?? []) {
-        map.set(ss.id.toString(), ss.serviceId.toString());
-      }
-    }
+    for (const ss of SUB_SERVICES) map.set(ss.id, ss.serviceId);
     return map;
-  }, [subServiceResults]);
+  }, []);
 
   return (
     <div className="space-y-3">
@@ -1737,7 +2211,9 @@ function BookingList({ isAdmin }: { isAdmin: boolean }) {
 
       {bookingsLoading && (
         <div className="space-y-2">
-          {[0, 1, 2].map((i) => <BookingRowSkeleton key={i} />)}
+          {[0, 1, 2].map((i) => (
+            <BookingRowSkeleton key={i} />
+          ))}
         </div>
       )}
 
@@ -1754,7 +2230,9 @@ function BookingList({ isAdmin }: { isAdmin: boolean }) {
           className="text-center py-10 space-y-1"
         >
           <p className="text-muted-foreground text-sm">No bookings yet.</p>
-          <p className="text-muted-foreground/60 text-xs">Create one using the form above.</p>
+          <p className="text-muted-foreground/60 text-xs">
+            Create one using the form above.
+          </p>
         </motion.div>
       )}
 
@@ -1790,42 +2268,31 @@ function BookingList({ isAdmin }: { isAdmin: boolean }) {
 function CustomerBookingList() {
   const [invoiceBookingId, setInvoiceBookingId] = useState<bigint | null>(null);
   const { data: bookings, isLoading: bookingsLoading } = useGetBookings();
-  const { data: services } = useGetServices();
   const { data: technicians } = useGetTechnicians();
 
-  const uniqueServiceIds = useMemo(() => (services ?? []).map((s) => s.id), [services]);
-  const subServiceResults = useGetAllSubServices(uniqueServiceIds);
-
+  // Static maps from in-memory catalog constants
   const subServiceMap = useMemo(() => {
     const map = new Map<string, string>();
-    for (const result of subServiceResults) {
-      for (const ss of result.data ?? []) {
-        map.set(ss.id.toString(), ss.name);
-      }
-    }
+    for (const ss of SUB_SERVICES) map.set(ss.id, ss.name);
     return map;
-  }, [subServiceResults]);
+  }, []);
 
   const serviceMap = useMemo(() => {
     const map = new Map<string, string>();
-    for (const s of services ?? []) map.set(s.id.toString(), s.name);
+    for (const s of SERVICES) map.set(s.id, s.name);
     return map;
-  }, [services]);
+  }, []);
 
   const subServiceToServiceMap = useMemo(() => {
     const map = new Map<string, string>();
-    for (const result of subServiceResults) {
-      for (const ss of result.data ?? []) {
-        map.set(ss.id.toString(), ss.serviceId.toString());
-      }
-    }
+    for (const ss of SUB_SERVICES) map.set(ss.id, ss.serviceId);
     return map;
-  }, [subServiceResults]);
+  }, []);
 
   // Customer sees only bookings with customerId === 0 (hardcoded in BookingForm)
   const myBookings = useMemo(
     () => (bookings ?? []).filter((b) => b.customerId === 0n),
-    [bookings]
+    [bookings],
   );
 
   return (
@@ -1835,21 +2302,26 @@ function CustomerBookingList() {
         <h2 className="font-semibold text-foreground">My Bookings</h2>
         {!bookingsLoading && (
           <span className="text-xs text-muted-foreground bg-muted px-2 py-0.5 rounded-full">
-            {myBookings.length} {myBookings.length === 1 ? "booking" : "bookings"}
+            {myBookings.length}{" "}
+            {myBookings.length === 1 ? "booking" : "bookings"}
           </span>
         )}
       </div>
 
       {bookingsLoading && (
         <div className="space-y-2">
-          {[0, 1].map((i) => <BookingRowSkeleton key={i} />)}
+          {[0, 1].map((i) => (
+            <BookingRowSkeleton key={i} />
+          ))}
         </div>
       )}
 
       {!bookingsLoading && myBookings.length === 0 && (
         <div className="text-center py-10 space-y-1">
           <p className="text-muted-foreground text-sm">No bookings found.</p>
-          <p className="text-muted-foreground/60 text-xs">Create a booking above to get started.</p>
+          <p className="text-muted-foreground/60 text-xs">
+            Create a booking above to get started.
+          </p>
         </div>
       )}
 
@@ -1884,45 +2356,37 @@ function CustomerBookingList() {
 
 /* ─── Technician Panel ───────────────────────────────────────── */
 
-function TechnicianPanel({ activeTechnicianId }: { activeTechnicianId: bigint | null }) {
+function TechnicianPanel({
+  activeTechnicianId,
+}: { activeTechnicianId: bigint | null }) {
   const [invoiceBookingId, setInvoiceBookingId] = useState<bigint | null>(null);
   const { data: bookings, isLoading: bookingsLoading } = useGetBookings();
-  const { data: services } = useGetServices();
   const { data: technicians } = useGetTechnicians();
 
-  const uniqueServiceIds = useMemo(() => (services ?? []).map((s) => s.id), [services]);
-  const subServiceResults = useGetAllSubServices(uniqueServiceIds);
-
+  // Static maps from in-memory catalog constants
   const subServiceMap = useMemo(() => {
     const map = new Map<string, string>();
-    for (const result of subServiceResults) {
-      for (const ss of result.data ?? []) {
-        map.set(ss.id.toString(), ss.name);
-      }
-    }
+    for (const ss of SUB_SERVICES) map.set(ss.id, ss.name);
     return map;
-  }, [subServiceResults]);
+  }, []);
 
   const serviceMap = useMemo(() => {
     const map = new Map<string, string>();
-    for (const s of services ?? []) map.set(s.id.toString(), s.name);
+    for (const s of SERVICES) map.set(s.id, s.name);
     return map;
-  }, [services]);
+  }, []);
 
   const subServiceToServiceMap = useMemo(() => {
     const map = new Map<string, string>();
-    for (const result of subServiceResults) {
-      for (const ss of result.data ?? []) {
-        map.set(ss.id.toString(), ss.serviceId.toString());
-      }
-    }
+    for (const ss of SUB_SERVICES) map.set(ss.id, ss.serviceId);
     return map;
-  }, [subServiceResults]);
+  }, []);
 
   const assignedBookings = useMemo(() => {
     if (activeTechnicianId === null) return [];
     return (bookings ?? []).filter(
-      (b) => b.technicianId !== undefined && b.technicianId === activeTechnicianId
+      (b) =>
+        b.technicianId !== undefined && b.technicianId === activeTechnicianId,
     );
   }, [bookings, activeTechnicianId]);
 
@@ -1937,44 +2401,56 @@ function TechnicianPanel({ activeTechnicianId }: { activeTechnicianId: bigint | 
           </span>
         )}
       </div>
-      <p className="text-sm text-muted-foreground">Showing bookings assigned to you.</p>
+      <p className="text-sm text-muted-foreground">
+        Showing bookings assigned to you.
+      </p>
 
       {activeTechnicianId === null && (
         <div className="text-center py-10 space-y-1">
-          <p className="text-muted-foreground text-sm">Enter your Technician ID above to view your assigned bookings.</p>
+          <p className="text-muted-foreground text-sm">
+            Enter your Technician ID above to view your assigned bookings.
+          </p>
         </div>
       )}
 
       {activeTechnicianId !== null && bookingsLoading && (
         <div className="space-y-2">
-          {[0, 1].map((i) => <BookingRowSkeleton key={i} />)}
-        </div>
-      )}
-
-      {activeTechnicianId !== null && !bookingsLoading && assignedBookings.length === 0 && (
-        <div className="text-center py-10 space-y-1">
-          <p className="text-muted-foreground text-sm">No bookings assigned to Technician #{String(activeTechnicianId)}.</p>
-        </div>
-      )}
-
-      {activeTechnicianId !== null && !bookingsLoading && assignedBookings.length > 0 && (
-        <div className="space-y-2">
-          {assignedBookings.map((booking, i) => (
-            <BookingRow
-              key={String(booking.id)}
-              booking={booking}
-              index={i}
-              isAdmin={false}
-              readOnly={true}
-              subServiceMap={subServiceMap}
-              serviceMap={serviceMap}
-              subServiceToServiceMap={subServiceToServiceMap}
-              technicians={technicians ?? []}
-              onViewInvoice={setInvoiceBookingId}
-            />
+          {[0, 1].map((i) => (
+            <BookingRowSkeleton key={i} />
           ))}
         </div>
       )}
+
+      {activeTechnicianId !== null &&
+        !bookingsLoading &&
+        assignedBookings.length === 0 && (
+          <div className="text-center py-10 space-y-1">
+            <p className="text-muted-foreground text-sm">
+              No bookings assigned to Technician #{String(activeTechnicianId)}.
+            </p>
+          </div>
+        )}
+
+      {activeTechnicianId !== null &&
+        !bookingsLoading &&
+        assignedBookings.length > 0 && (
+          <div className="space-y-2">
+            {assignedBookings.map((booking, i) => (
+              <BookingRow
+                key={String(booking.id)}
+                booking={booking}
+                index={i}
+                isAdmin={false}
+                readOnly={true}
+                subServiceMap={subServiceMap}
+                serviceMap={serviceMap}
+                subServiceToServiceMap={subServiceToServiceMap}
+                technicians={technicians ?? []}
+                onViewInvoice={setInvoiceBookingId}
+              />
+            ))}
+          </div>
+        )}
 
       <InvoiceModal
         bookingId={invoiceBookingId}
@@ -1988,7 +2464,9 @@ function TechnicianPanel({ activeTechnicianId }: { activeTechnicianId: bigint | 
 
 export default function App() {
   const [role, setRole] = useState<AppRole>("admin");
-  const [activeTechnicianId, setActiveTechnicianId] = useState<bigint | null>(null);
+  const [activeTechnicianId, setActiveTechnicianId] = useState<bigint | null>(
+    null,
+  );
 
   const isAdmin = role === "admin";
   const isTechnician = role === "technician";
@@ -2028,7 +2506,6 @@ export default function App() {
 
       {/* Main content */}
       <main className="max-w-2xl mx-auto px-4 py-8 space-y-8">
-
         {/* Role Selector */}
         <RoleSelector
           role={role}
@@ -2056,7 +2533,9 @@ export default function App() {
                 className="rounded-xl border border-border bg-card shadow-xs p-5 sm:p-6"
               >
                 <div className="mb-5">
-                  <h2 className="font-display text-lg font-semibold text-foreground">Add New User</h2>
+                  <h2 className="font-display text-lg font-semibold text-foreground">
+                    Add New User
+                  </h2>
                   <p className="text-sm text-muted-foreground mt-0.5">
                     Register an admin, technician, or customer in the system.
                   </p>
@@ -2085,7 +2564,9 @@ export default function App() {
                 className="rounded-xl border border-border bg-card shadow-xs p-5 sm:p-6"
               >
                 <div className="mb-5">
-                  <h2 className="font-display text-lg font-semibold text-foreground">Technician Management</h2>
+                  <h2 className="font-display text-lg font-semibold text-foreground">
+                    Technician Management
+                  </h2>
                   <p className="text-sm text-muted-foreground mt-0.5">
                     Add and manage field technicians.
                   </p>
@@ -2121,7 +2602,9 @@ export default function App() {
               className="rounded-xl border border-border bg-card shadow-xs p-5 sm:p-6"
             >
               <div className="mb-5">
-                <h2 className="font-display text-lg font-semibold text-foreground">Create Booking</h2>
+                <h2 className="font-display text-lg font-semibold text-foreground">
+                  Create Booking
+                </h2>
                 <p className="text-sm text-muted-foreground mt-0.5">
                   Select a service and sub-service to book.
                 </p>
@@ -2176,7 +2659,6 @@ export default function App() {
             </motion.section>
           )}
         </AnimatePresence>
-
       </main>
 
       {/* Footer */}
