@@ -61,4 +61,6 @@ export interface backendInterface {
     getServices(): Promise<Array<Service>>;
     getSubServicesByService(serviceId: bigint): Promise<Array<SubService>>;
     getUsers(): Promise<Array<User>>;
+    isSeedDone(): Promise<boolean>;
+    seedData(): Promise<void>;
 }

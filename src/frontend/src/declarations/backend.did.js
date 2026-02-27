@@ -79,6 +79,8 @@ export const idlService = IDL.Service({
       ['query'],
     ),
   'getUsers' : IDL.Func([], [IDL.Vec(User)], ['query']),
+  'isSeedDone' : IDL.Func([], [IDL.Bool], ['query']),
+  'seedData' : IDL.Func([], [], []),
 });
 
 export const idlInitArgs = [];
@@ -155,6 +157,8 @@ export const idlFactory = ({ IDL }) => {
         ['query'],
       ),
     'getUsers' : IDL.Func([], [IDL.Vec(User)], ['query']),
+    'isSeedDone' : IDL.Func([], [IDL.Bool], ['query']),
+    'seedData' : IDL.Func([], [], []),
   });
 };
 

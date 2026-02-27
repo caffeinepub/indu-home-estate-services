@@ -143,6 +143,8 @@ export interface backendInterface {
     getServices(): Promise<Array<Service>>;
     getSubServicesByService(serviceId: bigint): Promise<Array<SubService>>;
     getUsers(): Promise<Array<User>>;
+    isSeedDone(): Promise<boolean>;
+    seedData(): Promise<void>;
 }
 import type { Booking as _Booking, BookingStatus as _BookingStatus, Role as _Role, User as _User } from "./declarations/backend.did.d.ts";
 export class Backend implements backendInterface {
@@ -257,6 +259,34 @@ export class Backend implements backendInterface {
         } else {
             const result = await this.actor.getUsers();
             return from_candid_vec_n12(this._uploadFile, this._downloadFile, result);
+        }
+    }
+    async isSeedDone(): Promise<boolean> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.isSeedDone();
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.isSeedDone();
+            return result;
+        }
+    }
+    async seedData(): Promise<void> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.seedData();
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.seedData();
+            return result;
         }
     }
 }

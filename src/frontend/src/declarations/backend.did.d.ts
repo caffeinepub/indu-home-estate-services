@@ -63,6 +63,8 @@ export interface _SERVICE {
   'getServices' : ActorMethod<[], Array<Service>>,
   'getSubServicesByService' : ActorMethod<[bigint], Array<SubService>>,
   'getUsers' : ActorMethod<[], Array<User>>,
+  'isSeedDone' : ActorMethod<[], boolean>,
+  'seedData' : ActorMethod<[], undefined>,
 }
 export declare const idlService: IDL.ServiceClass;
 export declare const idlInitArgs: IDL.Type[];

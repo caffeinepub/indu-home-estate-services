@@ -16,7 +16,7 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Separator } from "@/components/ui/separator";
 import { Toaster } from "@/components/ui/sonner";
-import { useGetUsers, useCreateUser, Role } from "./hooks/useQueries";
+import { useGetUsers, useCreateUser, useGetServices, useGetSubServicesByService, useCreateBooking, Role } from "./hooks/useQueries";
 import type { User as UserType } from "./backend";
 
 /* ─── Helpers ─────────────────────────────────────────────────── */
@@ -286,6 +286,122 @@ function UsersList() {
   );
 }
 
+/* ─── Booking Form ───────────────────────────────────────────── */
+
+function BookingForm() {
+  const [selectedServiceId, setSelectedServiceId] = useState<string>("");
+  const [selectedSubServiceId, setSelectedSubServiceId] = useState<string>("");
+  const [quantity, setQuantity] = useState<string>("");
+
+  const { data: services, isLoading: servicesLoading } = useGetServices();
+  const { data: subServices, isLoading: subServicesLoading } = useGetSubServicesByService(
+    selectedServiceId ? BigInt(selectedServiceId) : null
+  );
+
+  const { mutateAsync: createBooking, isPending } = useCreateBooking();
+
+  const handleServiceChange = (val: string) => {
+    setSelectedServiceId(val);
+    setSelectedSubServiceId("");
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!selectedSubServiceId || !quantity) return;
+    try {
+      const booking = await createBooking({
+        customerId: 0n,
+        subServiceId: BigInt(selectedSubServiceId),
+        propertyType: "Apartment",
+        quantity: BigInt(quantity),
+      });
+      toast.success(`Booking #${booking.id} created. Total: ₹${booking.totalAmount}`);
+      setSelectedServiceId("");
+      setSelectedSubServiceId("");
+      setQuantity("");
+    } catch {
+      toast.error("Failed to create booking. Please try again.");
+    }
+  };
+
+  return (
+    <form onSubmit={handleSubmit} className="space-y-4">
+      {/* Service dropdown */}
+      <div className="space-y-1.5">
+        <Label htmlFor="service" className="text-sm font-medium text-foreground">Service</Label>
+        {!servicesLoading && services && services.length === 0 ? (
+          <p className="text-sm text-muted-foreground py-2">No services found. Please add services.</p>
+        ) : (
+          <Select value={selectedServiceId} onValueChange={handleServiceChange} disabled={servicesLoading}>
+            <SelectTrigger id="service" className="bg-background w-full">
+              <SelectValue placeholder={servicesLoading ? "Loading..." : "Select a service"} />
+            </SelectTrigger>
+            <SelectContent>
+              {(services ?? []).map((s) => (
+                <SelectItem key={String(s.id)} value={String(s.id)}>
+                  {s.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        )}
+      </div>
+
+      {/* SubService dropdown */}
+      <div className="space-y-1.5">
+        <Label htmlFor="subservice" className="text-sm font-medium text-foreground">Sub-Service</Label>
+        <Select
+          value={selectedSubServiceId}
+          onValueChange={setSelectedSubServiceId}
+          disabled={!selectedServiceId || subServicesLoading}
+        >
+          <SelectTrigger id="subservice" className="bg-background w-full">
+            <SelectValue placeholder={!selectedServiceId ? "Select a service first" : subServicesLoading ? "Loading..." : "Select a sub-service"} />
+          </SelectTrigger>
+          <SelectContent>
+            {(subServices ?? []).map((ss) => (
+              <SelectItem key={String(ss.id)} value={String(ss.id)}>
+                {ss.name}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+
+      {/* Quantity input */}
+      <div className="space-y-1.5">
+        <Label htmlFor="quantity" className="text-sm font-medium text-foreground">Quantity</Label>
+        <Input
+          id="quantity"
+          type="number"
+          min="1"
+          placeholder="e.g. 1200"
+          value={quantity}
+          onChange={(e) => setQuantity(e.target.value)}
+          disabled={isPending}
+          className="bg-background"
+          required
+        />
+      </div>
+
+      <Button
+        type="submit"
+        disabled={isPending || !selectedSubServiceId || !quantity}
+        className="w-full bg-primary text-primary-foreground hover:bg-primary/90"
+      >
+        {isPending ? (
+          <>
+            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+            Creating Booking...
+          </>
+        ) : (
+          "Create Booking"
+        )}
+      </Button>
+    </form>
+  );
+}
+
 /* ─── App Root ───────────────────────────────────────────────── */
 
 export default function App() {
@@ -351,6 +467,24 @@ export default function App() {
           transition={{ duration: 0.4, delay: 0.2 }}
         >
           <UsersList />
+        </motion.section>
+
+        <Separator className="bg-border/60" />
+
+        {/* Booking Form Section */}
+        <motion.section
+          initial={{ opacity: 0, y: 16 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.4, delay: 0.3 }}
+          className="rounded-xl border border-border bg-card shadow-xs p-5 sm:p-6"
+        >
+          <div className="mb-5">
+            <h2 className="font-display text-lg font-semibold text-foreground">Create Booking</h2>
+            <p className="text-sm text-muted-foreground mt-0.5">
+              Select a service and sub-service to book.
+            </p>
+          </div>
+          <BookingForm />
         </motion.section>
       </main>
 
