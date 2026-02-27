@@ -591,7 +591,7 @@ function TechnicianManagement() {
             </Label>
             <Input
               id="tech-name"
-              placeholder="e.g. Raju Kumar"
+              placeholder="e.g. Suresh Kumar"
               value={name}
               onChange={(e) => setName(e.target.value)}
               disabled={isPending}
@@ -609,7 +609,7 @@ function TechnicianManagement() {
             <Input
               id="tech-phone"
               type="tel"
-              placeholder="+91XXXXXXXXXX"
+              placeholder="+91 98765 XXXXX"
               value={phone}
               onChange={(e) => setPhone(e.target.value)}
               disabled={isPending}
@@ -738,8 +738,6 @@ function BookingForm() {
   const queryClient = useQueryClient();
 
   const handleCreateBooking = async () => {
-    console.log("Button clicked");
-
     if (!serviceId) {
       toast.error("Please select a service.");
       return;
@@ -809,7 +807,6 @@ function BookingForm() {
       const waMsg = `*New Booking – Indu Home & Estate Services*\n\nCustomer Name: Guest\nService: ${serviceName}\nSub-Service: ${subServiceName}\nDate: ${scheduledDate} at ${scheduledTime}\nAddress: ${address.trim()}\nTotal: ₹${Number(booking.totalAmount).toLocaleString("en-IN")}\nAdvance: ₹${Number(booking.advanceAmount).toLocaleString("en-IN")}\nBalance: ₹${Number(booking.balanceAmount).toLocaleString("en-IN")}\nPayment Status: Unpaid\n\nBooking ID: #${String(booking.id).padStart(4, "0")}`;
       setWhatsappMsg(waMsg);
 
-      console.log("Booking Created:", booking);
       toast.success("Booking Created Successfully");
       setServiceId("");
       setSubServiceId("");
@@ -1338,8 +1335,14 @@ function InvoiceModal({
               <p className="text-xs text-muted-foreground">
                 Chikmagalur, Karnataka, India
               </p>
+              <p className="text-xs text-muted-foreground">
+                Proprietor: Mounith H C
+              </p>
+              <p className="text-xs text-muted-foreground">
+                GSTIN: Applied For
+              </p>
               <p className="text-xs text-muted-foreground mt-1 font-mono">
-                Booking #{String(invoice.bookingId).padStart(4, "0")}
+                Invoice #{String(invoice.bookingId).padStart(4, "0")}
               </p>
             </div>
 
@@ -1407,9 +1410,14 @@ function InvoiceModal({
                 </span>
               </div>
               <div className="grid grid-cols-2 gap-1 text-sm">
-                <span className="text-muted-foreground">Commission</span>
+                <span className="text-muted-foreground">
+                  Technician Commission
+                </span>
                 <span className="text-amber-700 font-medium text-right">
-                  ₹{invoice.commission.toLocaleString("en-IN")}
+                  ₹
+                  {Math.round(Number(invoice.totalAmount) * 0.4).toLocaleString(
+                    "en-IN",
+                  )}
                 </span>
               </div>
               <div className="grid grid-cols-2 gap-1 text-sm items-center">
@@ -1489,6 +1497,7 @@ function DashboardCards() {
         totalRevenue: 0n,
         totalAdvance: 0n,
         totalCommission: 0n,
+        totalCompanyProfit: 0n,
         pendingPayments: 0,
         assignedBookings: 0,
         completedBookings: 0,
@@ -1509,7 +1518,14 @@ function DashboardCards() {
           ? sum + (b.advanceAmount ?? 0n)
           : sum;
       }, 0n),
-      totalCommission: list.reduce((sum, b) => sum + (b.commission ?? 0n), 0n),
+      totalCommission: list.reduce(
+        (sum, b) => sum + BigInt(Math.round(Number(b.totalAmount ?? 0n) * 0.4)),
+        0n,
+      ),
+      totalCompanyProfit: list.reduce(
+        (sum, b) => sum + BigInt(Math.round(Number(b.totalAmount ?? 0n) * 0.6)),
+        0n,
+      ),
       pendingPayments: list.filter(
         (b) => (b.paymentStatus ?? "unpaid") === "unpaid",
       ).length,
@@ -1578,13 +1594,22 @@ function DashboardCards() {
       bgClass: "bg-blue-50",
     },
     {
-      label: "Commission Earned",
+      label: "Technician Payouts (40%)",
       value: isLoading
         ? null
         : `₹${stats.totalCommission.toLocaleString("en-IN")}`,
       icon: BadgePercent,
       iconClass: "text-amber-700",
       bgClass: "bg-amber-50",
+    },
+    {
+      label: "Company Profit (60%)",
+      value: isLoading
+        ? null
+        : `₹${stats.totalCompanyProfit.toLocaleString("en-IN")}`,
+      icon: TrendingUp,
+      iconClass: "text-primary",
+      bgClass: "bg-primary/8",
     },
     {
       label: "Pending Payments",
@@ -1629,6 +1654,7 @@ function DashboardCards() {
         <LayoutDashboard className="w-4 h-4 text-muted-foreground" />
         <h2 className="font-semibold text-foreground">Dashboard Overview</h2>
       </div>
+
       <div className="grid grid-cols-2 gap-3">
         {cards.map((card) => {
           const Icon = card.icon;
@@ -1927,12 +1953,39 @@ function BookingRow({
           </span>
         </span>
         <span>
-          Commission:{" "}
+          Technician Commission (40%):{" "}
           <span className="text-amber-700 font-medium">
-            ₹{booking.commission.toLocaleString("en-IN")}
+            ₹
+            {Math.round(Number(booking.totalAmount) * 0.4).toLocaleString(
+              "en-IN",
+            )}
           </span>
         </span>
       </div>
+
+      {/* Row 3b: Technician Earnings + Company Profit — Admin only */}
+      {isAdmin && (
+        <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs rounded-md bg-muted/40 border border-border px-3 py-2">
+          <span>
+            Technician Earnings (40%):{" "}
+            <span className="text-emerald-700 font-semibold">
+              ₹
+              {Math.round(Number(booking.totalAmount) * 0.4).toLocaleString(
+                "en-IN",
+              )}
+            </span>
+          </span>
+          <span>
+            Company Profit (60%):{" "}
+            <span className="text-primary font-semibold">
+              ₹
+              {Math.round(Number(booking.totalAmount) * 0.6).toLocaleString(
+                "en-IN",
+              )}
+            </span>
+          </span>
+        </div>
+      )}
 
       {/* Row 4: Schedule & address */}
       {(booking.scheduledDate || booking.address) && (
@@ -2663,17 +2716,18 @@ export default function App() {
 
       {/* Footer */}
       <footer className="border-t border-border mt-12 py-6">
-        <p className="text-center text-xs text-muted-foreground">
-          © {new Date().getFullYear()}.{" "}
-          <a
-            href={`https://caffeine.ai?utm_source=caffeine-footer&utm_medium=referral&utm_content=${encodeURIComponent(window.location.hostname)}`}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="underline underline-offset-2 hover:text-foreground transition-colors"
-          >
-            Built with ♥ using caffeine.ai
-          </a>
-        </p>
+        <div className="max-w-2xl mx-auto px-4 text-center space-y-1">
+          <p className="text-xs text-muted-foreground font-medium">
+            Indu Home &amp; Estate Services
+          </p>
+          <p className="text-xs text-muted-foreground">
+            Chikmagalur, Karnataka, India &nbsp;·&nbsp; +91 94482 XXXXX
+          </p>
+          <p className="text-xs text-muted-foreground">
+            © {new Date().getFullYear()} Indu Home &amp; Estate Services. All
+            rights reserved.
+          </p>
+        </div>
       </footer>
     </div>
   );

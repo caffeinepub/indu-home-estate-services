@@ -1,9 +1,9 @@
 import Array "mo:core/Array";
 import Nat "mo:core/Nat";
 import Time "mo:core/Time";
-import Migration "migration";
 
-(with migration = Migration.run)
+
+
 actor {
   type Role = {
     #admin;
