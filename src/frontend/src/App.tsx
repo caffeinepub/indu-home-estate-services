@@ -127,7 +127,7 @@ const rootRoute = createRootRoute({ component: Outlet });
 // ── Website layout (no sidebar/header) — mounted at "/"
 const websiteLayoutRoute = createRoute({
   getParentRoute: () => rootRoute,
-  path: "/",
+  id: "website-layout",
   component: WebsiteLayoutWrapper,
 });
 
