@@ -1,5 +1,7 @@
 import Array "mo:core/Array";
+import List "mo:core/List";
 import Nat "mo:core/Nat";
+import Principal "mo:core/Principal";
 import Time "mo:core/Time";
 
 
@@ -100,9 +102,11 @@ actor {
   stable var nextServiceId = 0;
   stable var nextSubServiceId = 0;
   stable var nextBookingId = 0;
+  stable var nextTechnicianId = 0;
+
   stable var seedDone = false;
   stable var subServicesSeedV2Done = false;
-  stable var nextTechnicianId = 0;
+  stable var seedV3Done = false;
 
   public query func isSeedDone() : async Bool {
     seedDone;
@@ -701,266 +705,45 @@ actor {
     found;
   };
 
-  system func postupgrade() {
-    if (services.size() == 0) {
-      let hardcodedServices : [Service] = [
-        {
-          id = 0;
-          name = "Plumbing";
-          category = "Home Repair";
-          basePrice = 500;
-          pricingType = "fixed";
-          createdAt = Time.now();
-        },
-        {
-          id = 1;
-          name = "Electrical";
-          category = "Home Repair";
-          basePrice = 600;
-          pricingType = "fixed";
-          createdAt = Time.now();
-        },
-        {
-          id = 2;
-          name = "Deep Cleaning";
-          category = "Cleaning";
-          basePrice = 8;
-          pricingType = "per_sqft";
-          createdAt = Time.now();
-        },
-        {
-          id = 3;
-          name = "Painting";
-          category = "Renovation";
-          basePrice = 12;
-          pricingType = "per_sqft";
-          createdAt = Time.now();
-        },
-        {
-          id = 4;
-          name = "AC Service";
-          category = "Appliances";
-          basePrice = 1200;
-          pricingType = "fixed";
-          createdAt = Time.now();
-        },
-        {
-          id = 5;
-          name = "Pest Control";
-          category = "Cleaning";
-          basePrice = 1500;
-          pricingType = "fixed";
-          createdAt = Time.now();
-        },
-        {
-          id = 6;
-          name = "Estate Maintenance";
-          category = "Estate";
-          basePrice = 2000;
-          pricingType = "custom";
-          createdAt = Time.now();
-        },
-      ];
+  // New function: deleteService (removes service and all its sub-services)
+  public shared ({ caller }) func deleteService(serviceId : Nat) : async Bool {
+    let initialServiceCount = services.size();
 
-      let hardcodedSubServices : [SubService] = [
-        {
-          id = 0;
-          serviceId = 0;
-          name = "Leak Fix";
-          basePrice = 500;
-          pricingType = "fixed";
-          createdAt = Time.now();
-        },
-        {
-          id = 1;
-          serviceId = 0;
-          name = "Pipe Installation";
-          basePrice = 800;
-          pricingType = "fixed";
-          createdAt = Time.now();
-        },
-        {
-          id = 2;
-          serviceId = 1;
-          name = "Wiring";
-          basePrice = 600;
-          pricingType = "fixed";
-          createdAt = Time.now();
-        },
-        {
-          id = 3;
-          serviceId = 1;
-          name = "Switch Board Repair";
-          basePrice = 400;
-          pricingType = "fixed";
-          createdAt = Time.now();
-        },
-        {
-          id = 4;
-          serviceId = 2;
-          name = "Home Deep Cleaning";
-          basePrice = 8;
-          pricingType = "per_sqft";
-          createdAt = Time.now();
-        },
-        {
-          id = 5;
-          serviceId = 2;
-          name = "Apartment Deep Cleaning";
-          basePrice = 8;
-          pricingType = "per_sqft";
-          createdAt = Time.now();
-        },
-        {
-          id = 6;
-          serviceId = 3;
-          name = "Interior Painting";
-          basePrice = 12;
-          pricingType = "per_sqft";
-          createdAt = Time.now();
-        },
-        {
-          id = 7;
-          serviceId = 3;
-          name = "Exterior Painting";
-          basePrice = 15;
-          pricingType = "per_sqft";
-          createdAt = Time.now();
-        },
-        {
-          id = 8;
-          serviceId = 4;
-          name = "AC General Service";
-          basePrice = 1200;
-          pricingType = "fixed";
-          createdAt = Time.now();
-        },
-        {
-          id = 9;
-          serviceId = 4;
-          name = "AC Gas Refill";
-          basePrice = 2500;
-          pricingType = "fixed";
-          createdAt = Time.now();
-        },
-        {
-          id = 10;
-          serviceId = 5;
-          name = "Termite Treatment";
-          basePrice = 8000;
-          pricingType = "fixed";
-          createdAt = Time.now();
-        },
-        {
-          id = 11;
-          serviceId = 5;
-          name = "General Pest Control";
-          basePrice = 1500;
-          pricingType = "fixed";
-          createdAt = Time.now();
-        },
-        {
-          id = 12;
-          serviceId = 6;
-          name = "Garden Maintenance";
-          basePrice = 3000;
-          pricingType = "fixed";
-          createdAt = Time.now();
-        },
-        {
-          id = 13;
-          serviceId = 6;
-          name = "Full Estate Management";
-          basePrice = 15000;
-          pricingType = "fixed";
-          createdAt = Time.now();
-        },
-      ];
+    // Remove the service
+    services := services.filter(func(s) { s.id != serviceId });
 
-      services := hardcodedServices;
-      subServices := hardcodedSubServices;
-      nextServiceId := 7;
-      nextSubServiceId := 14;
-      seedDone := true;
-    };
+    // Remove all sub-services under the service
+    subServices := subServices.filter(func(ss) { ss.serviceId != serviceId });
 
-    if (not subServicesSeedV2Done) {
-      let newSubServices : [SubService] = [
-        { id = 14; serviceId = 0; name = "Leak Detection"; basePrice = 699; pricingType = "fixed"; createdAt = Time.now() },
-        { id = 15; serviceId = 0; name = "Tap Installation"; basePrice = 499; pricingType = "fixed"; createdAt = Time.now() },
-        { id = 16; serviceId = 0; name = "Shower Installation"; basePrice = 999; pricingType = "fixed"; createdAt = Time.now() },
-        { id = 17; serviceId = 0; name = "Geyser Plumbing"; basePrice = 1200; pricingType = "fixed"; createdAt = Time.now() },
-        { id = 18; serviceId = 0; name = "Drain Block Removal"; basePrice = 1200; pricingType = "fixed"; createdAt = Time.now() },
-        { id = 19; serviceId = 0; name = "Bathroom Renovation Plumbing"; basePrice = 5000; pricingType = "fixed"; createdAt = Time.now() },
-        { id = 20; serviceId = 0; name = "Borewell Motor Connection"; basePrice = 1500; pricingType = "fixed"; createdAt = Time.now() },
-        { id = 21; serviceId = 0; name = "Overhead Tank Plumbing"; basePrice = 2000; pricingType = "fixed"; createdAt = Time.now() },
-        { id = 22; serviceId = 0; name = "Water Pressure Fix"; basePrice = 800; pricingType = "fixed"; createdAt = Time.now() },
-        { id = 23; serviceId = 0; name = "Pipeline Replacement"; basePrice = 3500; pricingType = "fixed"; createdAt = Time.now() },
-        { id = 24; serviceId = 1; name = "Full House Wiring"; basePrice = 25; pricingType = "per_sqft"; createdAt = Time.now() },
-        { id = 25; serviceId = 1; name = "Switch Installation"; basePrice = 299; pricingType = "fixed"; createdAt = Time.now() },
-        { id = 26; serviceId = 1; name = "MCB Installation"; basePrice = 799; pricingType = "fixed"; createdAt = Time.now() },
-        { id = 27; serviceId = 1; name = "Earthing Work"; basePrice = 2500; pricingType = "fixed"; createdAt = Time.now() },
-        { id = 28; serviceId = 1; name = "Power Backup Setup"; basePrice = 1500; pricingType = "fixed"; createdAt = Time.now() },
-        { id = 29; serviceId = 1; name = "Solar Panel Wiring"; basePrice = 5000; pricingType = "fixed"; createdAt = Time.now() },
-        { id = 30; serviceId = 1; name = "Outdoor Lighting"; basePrice = 1200; pricingType = "fixed"; createdAt = Time.now() },
-        { id = 31; serviceId = 1; name = "LED Conversion"; basePrice = 299; pricingType = "fixed"; createdAt = Time.now() },
-        { id = 32; serviceId = 1; name = "Electrical Inspection"; basePrice = 699; pricingType = "fixed"; createdAt = Time.now() },
-        { id = 33; serviceId = 1; name = "Fuse Replacement"; basePrice = 299; pricingType = "fixed"; createdAt = Time.now() },
-        { id = 34; serviceId = 2; name = "Full House Deep Cleaning"; basePrice = 8; pricingType = "per_sqft"; createdAt = Time.now() },
-        { id = 35; serviceId = 2; name = "Villa Deep Cleaning"; basePrice = 7; pricingType = "per_sqft"; createdAt = Time.now() },
-        { id = 36; serviceId = 2; name = "Move-in Cleaning"; basePrice = 4000; pricingType = "fixed"; createdAt = Time.now() },
-        { id = 37; serviceId = 2; name = "Move-out Cleaning"; basePrice = 4000; pricingType = "fixed"; createdAt = Time.now() },
-        { id = 38; serviceId = 2; name = "Post Construction Cleaning"; basePrice = 10; pricingType = "per_sqft"; createdAt = Time.now() },
-        { id = 39; serviceId = 2; name = "Office Deep Cleaning"; basePrice = 6; pricingType = "per_sqft"; createdAt = Time.now() },
-        { id = 40; serviceId = 2; name = "Floor Scrubbing"; basePrice = 3; pricingType = "per_sqft"; createdAt = Time.now() },
-        { id = 41; serviceId = 2; name = "Marble Polishing"; basePrice = 5; pricingType = "per_sqft"; createdAt = Time.now() },
-        { id = 42; serviceId = 2; name = "Window Cleaning"; basePrice = 1500; pricingType = "fixed"; createdAt = Time.now() },
-        { id = 43; serviceId = 2; name = "Carpet Cleaning"; basePrice = 2000; pricingType = "fixed"; createdAt = Time.now() },
-        { id = 44; serviceId = 3; name = "Interior Repainting"; basePrice = 12; pricingType = "per_sqft"; createdAt = Time.now() },
-        { id = 45; serviceId = 3; name = "Exterior Repainting"; basePrice = 18; pricingType = "per_sqft"; createdAt = Time.now() },
-        { id = 46; serviceId = 3; name = "Commercial Painting"; basePrice = 10; pricingType = "per_sqft"; createdAt = Time.now() },
-        { id = 47; serviceId = 3; name = "Fence Painting"; basePrice = 2000; pricingType = "fixed"; createdAt = Time.now() },
-        { id = 48; serviceId = 3; name = "Gate Painting"; basePrice = 1500; pricingType = "fixed"; createdAt = Time.now() },
-        { id = 49; serviceId = 3; name = "Ceiling Painting"; basePrice = 8; pricingType = "per_sqft"; createdAt = Time.now() },
-        { id = 50; serviceId = 3; name = "Crack Filling"; basePrice = 3000; pricingType = "fixed"; createdAt = Time.now() },
-        { id = 51; serviceId = 3; name = "Damp Proof Painting"; basePrice = 20; pricingType = "per_sqft"; createdAt = Time.now() },
-        { id = 52; serviceId = 3; name = "Primer Application"; basePrice = 6; pricingType = "per_sqft"; createdAt = Time.now() },
-        { id = 53; serviceId = 3; name = "Luxury Finish Painting"; basePrice = 45; pricingType = "per_sqft"; createdAt = Time.now() },
-        { id = 54; serviceId = 4; name = "Split AC Installation"; basePrice = 1800; pricingType = "fixed"; createdAt = Time.now() },
-        { id = 55; serviceId = 4; name = "Window AC Installation"; basePrice = 1200; pricingType = "fixed"; createdAt = Time.now() },
-        { id = 56; serviceId = 4; name = "AC Dismantling"; basePrice = 800; pricingType = "fixed"; createdAt = Time.now() },
-        { id = 57; serviceId = 4; name = "AC Relocation"; basePrice = 2500; pricingType = "fixed"; createdAt = Time.now() },
-        { id = 58; serviceId = 4; name = "Cooling Issue Diagnosis"; basePrice = 499; pricingType = "fixed"; createdAt = Time.now() },
-        { id = 59; serviceId = 4; name = "AC Coil Cleaning"; basePrice = 1500; pricingType = "fixed"; createdAt = Time.now() },
-        { id = 60; serviceId = 4; name = "AC PCB Repair"; basePrice = 2000; pricingType = "fixed"; createdAt = Time.now() },
-        { id = 61; serviceId = 4; name = "AMC Annual Contract"; basePrice = 3500; pricingType = "fixed"; createdAt = Time.now() },
-        { id = 62; serviceId = 4; name = "AC Deep Service"; basePrice = 1999; pricingType = "fixed"; createdAt = Time.now() },
-        { id = 63; serviceId = 4; name = "AC Water Leakage Fix"; basePrice = 999; pricingType = "fixed"; createdAt = Time.now() },
-        { id = 64; serviceId = 5; name = "Termite Anti Treatment"; basePrice = 12; pricingType = "per_sqft"; createdAt = Time.now() },
-        { id = 65; serviceId = 5; name = "Pre Construction Termite"; basePrice = 10; pricingType = "per_sqft"; createdAt = Time.now() },
-        { id = 66; serviceId = 5; name = "Cockroach Gel Treatment"; basePrice = 1200; pricingType = "fixed"; createdAt = Time.now() },
-        { id = 67; serviceId = 5; name = "Mosquito Fogging"; basePrice = 1500; pricingType = "fixed"; createdAt = Time.now() },
-        { id = 68; serviceId = 5; name = "Ant Control"; basePrice = 1000; pricingType = "fixed"; createdAt = Time.now() },
-        { id = 69; serviceId = 5; name = "Spider Control"; basePrice = 1000; pricingType = "fixed"; createdAt = Time.now() },
-        { id = 70; serviceId = 5; name = "Lizard Control"; basePrice = 1200; pricingType = "fixed"; createdAt = Time.now() },
-        { id = 71; serviceId = 5; name = "Warehouse Pest Control"; basePrice = 5; pricingType = "per_sqft"; createdAt = Time.now() },
-        { id = 72; serviceId = 5; name = "Farm Pest Control"; basePrice = 2500; pricingType = "fixed"; createdAt = Time.now() },
-        { id = 73; serviceId = 5; name = "Eco Friendly Pest Control"; basePrice = 1800; pricingType = "fixed"; createdAt = Time.now() },
-        { id = 74; serviceId = 6; name = "Full Estate Supervision"; basePrice = 20000; pricingType = "fixed"; createdAt = Time.now() },
-        { id = 75; serviceId = 6; name = "Farm Management"; basePrice = 15000; pricingType = "fixed"; createdAt = Time.now() },
-        { id = 76; serviceId = 6; name = "Coffee Plantation Maintenance"; basePrice = 3000; pricingType = "per_acre"; createdAt = Time.now() },
-        { id = 77; serviceId = 6; name = "Irrigation System Check"; basePrice = 3500; pricingType = "fixed"; createdAt = Time.now() },
-        { id = 78; serviceId = 6; name = "Fence Repair"; basePrice = 2000; pricingType = "fixed"; createdAt = Time.now() },
-        { id = 79; serviceId = 6; name = "Labor Supervision"; basePrice = 5000; pricingType = "fixed"; createdAt = Time.now() },
-        { id = 80; serviceId = 6; name = "Property Inspection"; basePrice = 2500; pricingType = "fixed"; createdAt = Time.now() },
-        { id = 81; serviceId = 6; name = "Estate Cleaning"; basePrice = 500; pricingType = "per_acre"; createdAt = Time.now() },
-        { id = 82; serviceId = 6; name = "Security Patrol"; basePrice = 8000; pricingType = "fixed"; createdAt = Time.now() },
-        { id = 83; serviceId = 6; name = "Harvest Support"; basePrice = 4000; pricingType = "fixed"; createdAt = Time.now() }
-      ];
-
-      subServices := subServices.concat(newSubServices);
-      nextSubServiceId := 84;
-      subServicesSeedV2Done := true;
-    };
+    // Return true if service was deleted
+    services.size() < initialServiceCount;
   };
+
+  // New function: deleteSubService (removes single sub-service)
+  public shared ({ caller }) func deleteSubService(subServiceId : Nat) : async Bool {
+    let initialCount = subServices.size();
+    subServices := subServices.filter(func(ss) { ss.id != subServiceId });
+    subServices.size() < initialCount;
+  };
+
+  // New function: updateSubServicePrice
+  public shared ({ caller }) func updateSubServicePrice(subServiceId : Nat, newPrice : Nat) : async Bool {
+    let originalSubServices = subServices;
+    let updated = subServices.any(
+      func(ss) { ss.id == subServiceId }
+    );
+
+    if (updated) {
+      subServices := subServices.map<SubService, SubService>(
+        func(ss) {
+          if (ss.id == subServiceId) {
+            { ss with basePrice = newPrice };
+          } else { ss };
+        }
+      );
+    } else { subServices := originalSubServices };
+    updated;
+  };
+
+  system func postupgrade() {};
 };

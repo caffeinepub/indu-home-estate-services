@@ -99,6 +99,8 @@ export interface _SERVICE {
   'createTechnician' : ActorMethod<[string, string], Technician>,
   'createUser' : ActorMethod<[string, Role], User>,
   'deactivateTechnician' : ActorMethod<[bigint], boolean>,
+  'deleteService' : ActorMethod<[bigint], boolean>,
+  'deleteSubService' : ActorMethod<[bigint], boolean>,
   'generateInvoice' : ActorMethod<[bigint], [] | [Invoice]>,
   'getBookings' : ActorMethod<[], Array<Booking>>,
   'getServices' : ActorMethod<[], Array<Service>>,
@@ -111,6 +113,7 @@ export interface _SERVICE {
   'seedData' : ActorMethod<[], undefined>,
   'seedSubServicesV2' : ActorMethod<[], undefined>,
   'updateBookingStatus' : ActorMethod<[bigint, BookingStatus], boolean>,
+  'updateSubServicePrice' : ActorMethod<[bigint, bigint], boolean>,
 }
 export declare const idlService: IDL.ServiceClass;
 export declare const idlInitArgs: IDL.Type[];

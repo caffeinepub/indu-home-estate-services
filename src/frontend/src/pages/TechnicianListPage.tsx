@@ -1,8 +1,11 @@
 import { TechnicianCard } from "@/components/TechnicianCard";
 import { UserSkeleton } from "@/components/UserCard";
+import { Button } from "@/components/ui/button";
 import { useGetTechnicians } from "@/hooks/useQueries";
-import { Wrench } from "lucide-react";
+import { exportToCsv } from "@/utils/exportToExcel";
+import { Download, Wrench } from "lucide-react";
 import { motion } from "motion/react";
+import { toast } from "sonner";
 
 interface TechnicianListPageProps {
   isAdmin: boolean;
@@ -10,6 +13,23 @@ interface TechnicianListPageProps {
 
 export function TechnicianListPage({ isAdmin }: TechnicianListPageProps) {
   const { data: technicians, isLoading } = useGetTechnicians();
+
+  const handleExport = () => {
+    if (!technicians || technicians.length === 0) {
+      toast.error("No technicians to export.");
+      return;
+    }
+    const rows = technicians.map((t) => ({
+      ID: String(t.id),
+      Name: t.name,
+      Phone: t.phone,
+      Status: t.activeStatus ? "Active" : "Inactive",
+      "Jobs Assigned": String(t.totalAssigned),
+      "Jobs Completed": String(t.totalCompleted),
+    }));
+    exportToCsv("technicians.csv", rows);
+    toast.success("Technicians exported.");
+  };
 
   return (
     <div className="space-y-6">
@@ -22,12 +42,23 @@ export function TechnicianListPage({ isAdmin }: TechnicianListPageProps) {
             Manage field technicians and their performance stats.
           </p>
         </div>
-        {!isLoading && technicians && (
-          <span className="text-xs text-muted-foreground bg-muted px-2 py-1 rounded-full shrink-0">
-            {technicians.length}{" "}
-            {technicians.length === 1 ? "technician" : "technicians"}
-          </span>
-        )}
+        <div className="flex items-center gap-2 shrink-0">
+          {!isLoading && technicians && (
+            <span className="text-xs text-muted-foreground bg-muted px-2 py-1 rounded-full">
+              {technicians.length}{" "}
+              {technicians.length === 1 ? "technician" : "technicians"}
+            </span>
+          )}
+          <Button
+            size="sm"
+            variant="outline"
+            className="gap-2 h-9"
+            onClick={handleExport}
+          >
+            <Download className="h-4 w-4" />
+            Export CSV
+          </Button>
+        </div>
       </div>
 
       {isLoading && (

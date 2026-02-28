@@ -325,5 +325,60 @@ export function useCancelBooking() {
   });
 }
 
+export function useDeleteService() {
+  const { actor } = useActor();
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({
+      serviceId,
+    }: { serviceId: bigint }): Promise<boolean> => {
+      if (!actor) throw new Error("No actor available");
+      return actor.deleteService(serviceId);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["services"] });
+      queryClient.invalidateQueries({ queryKey: ["allSubServices"] });
+    },
+  });
+}
+
+export function useDeleteSubService() {
+  const { actor } = useActor();
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({
+      subServiceId,
+    }: { subServiceId: bigint }): Promise<boolean> => {
+      if (!actor) throw new Error("No actor available");
+      return actor.deleteSubService(subServiceId);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["subServices"] });
+      queryClient.invalidateQueries({ queryKey: ["allSubServices"] });
+    },
+  });
+}
+
+export function useUpdateSubServicePrice() {
+  const { actor } = useActor();
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({
+      subServiceId,
+      newPrice,
+    }: {
+      subServiceId: bigint;
+      newPrice: bigint;
+    }): Promise<boolean> => {
+      if (!actor) throw new Error("No actor available");
+      return actor.updateSubServicePrice(subServiceId, newPrice);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["subServices"] });
+      queryClient.invalidateQueries({ queryKey: ["allSubServices"] });
+    },
+  });
+}
+
 export { Role, BookingStatus };
 export type { Technician, Invoice };

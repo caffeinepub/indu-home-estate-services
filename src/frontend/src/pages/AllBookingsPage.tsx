@@ -1,9 +1,11 @@
 import { BookingRow, BookingRowSkeleton } from "@/components/BookingRow";
 import { InvoiceModal } from "@/components/InvoiceModal";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { useGetBookings, useGetTechnicians } from "@/hooks/useQueries";
 import { useServiceMaps } from "@/hooks/useServiceMaps";
-import { BookOpen, ShieldCheck } from "lucide-react";
+import { exportToCsv } from "@/utils/exportToExcel";
+import { BookOpen, Download, ShieldCheck } from "lucide-react";
 import { motion } from "motion/react";
 import { useState } from "react";
 
@@ -21,6 +23,34 @@ export function AllBookingsPage({ isAdmin }: AllBookingsPageProps) {
   const { data: technicians } = useGetTechnicians();
   const { subServiceMap, serviceMap, subServiceToServiceMap } =
     useServiceMaps();
+
+  const handleExport = () => {
+    if (!bookings || bookings.length === 0) return;
+    const rows = bookings.map((b) => {
+      const subServiceName =
+        subServiceMap.get(b.subServiceId.toString()) ?? `#${b.subServiceId}`;
+      const serviceId = subServiceToServiceMap.get(b.subServiceId.toString());
+      const serviceName = serviceId
+        ? (serviceMap.get(serviceId) ?? `Service #${serviceId}`)
+        : "—";
+      return {
+        ID: String(b.id),
+        Service: serviceName,
+        "Sub-Service": subServiceName,
+        "Property Type": b.propertyType,
+        Quantity: String(b.quantity),
+        "Total Amount": String(b.totalAmount),
+        Advance: String(b.advanceAmount),
+        Balance: String(b.balanceAmount),
+        Commission: String(b.commission),
+        Status: b.status,
+        "Payment Status": b.paymentStatus,
+        "Scheduled Date": b.scheduledDate,
+        Address: b.address,
+      };
+    });
+    exportToCsv("bookings.csv", rows);
+  };
 
   return (
     <div className="space-y-6">
@@ -44,6 +74,15 @@ export function AllBookingsPage({ isAdmin }: AllBookingsPageProps) {
                 Admin Controls
               </Badge>
             )}
+            <Button
+              size="sm"
+              variant="outline"
+              className="h-7 gap-1 text-xs"
+              onClick={handleExport}
+            >
+              <Download className="h-3 w-3" />
+              Export CSV
+            </Button>
           </div>
         )}
       </div>

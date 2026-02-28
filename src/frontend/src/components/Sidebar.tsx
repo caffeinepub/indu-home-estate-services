@@ -1,3 +1,4 @@
+import { useWebsiteStore } from "@/hooks/useWebsiteStore";
 import type { AppRole } from "@/lib/helpers";
 import { Link, useRouterState } from "@tanstack/react-router";
 import {
@@ -6,11 +7,17 @@ import {
   Building2,
   ChevronDown,
   ChevronRight,
+  Globe,
+  Home,
   LayoutDashboard,
   List,
+  Mail,
+  MessageSquare,
   PlusCircle,
   Receipt,
+  Search,
   Settings,
+  Star,
   Users,
   Wrench,
 } from "lucide-react";
@@ -41,16 +48,20 @@ const isGroup = (entry: NavEntry): entry is SidebarGroup => "items" in entry;
 const NAV_ENTRIES: NavEntry[] = [
   {
     label: "Dashboard",
-    to: "/",
+    to: "/admin",
     icon: LayoutDashboard,
   },
   {
     label: "Bookings",
     icon: BookOpen,
     items: [
-      { label: "Create Booking", to: "/bookings/create", icon: PlusCircle },
-      { label: "All Bookings", to: "/bookings/all", icon: List },
-      { label: "Invoices", to: "/bookings/invoices", icon: Receipt },
+      {
+        label: "Create Booking",
+        to: "/admin/bookings/create",
+        icon: PlusCircle,
+      },
+      { label: "All Bookings", to: "/admin/bookings/all", icon: List },
+      { label: "Invoices", to: "/admin/bookings/invoices", icon: Receipt },
     ],
   },
   {
@@ -58,8 +69,8 @@ const NAV_ENTRIES: NavEntry[] = [
     icon: Users,
     adminOnly: true,
     items: [
-      { label: "Add User", to: "/users/add", icon: PlusCircle },
-      { label: "All Users", to: "/users/all", icon: List },
+      { label: "Add User", to: "/admin/users/add", icon: PlusCircle },
+      { label: "All Users", to: "/admin/users/all", icon: List },
     ],
   },
   {
@@ -67,37 +78,75 @@ const NAV_ENTRIES: NavEntry[] = [
     icon: Wrench,
     adminOnly: true,
     items: [
-      { label: "Add Technician", to: "/technicians/add", icon: PlusCircle },
-      { label: "Technician List", to: "/technicians/list", icon: List },
+      {
+        label: "Add Technician",
+        to: "/admin/technicians/add",
+        icon: PlusCircle,
+      },
+      { label: "Technician List", to: "/admin/technicians/list", icon: List },
     ],
   },
   {
     label: "Services",
     icon: Settings,
     items: [
-      { label: "Add Service", to: "/services/add", icon: PlusCircle },
-      { label: "Service List", to: "/services/list", icon: List },
+      { label: "Add Service", to: "/admin/services/add", icon: PlusCircle },
+      { label: "Service List", to: "/admin/services/list", icon: List },
     ],
   },
   {
     label: "Reports",
-    to: "/reports",
+    to: "/admin/reports",
     icon: BarChart3,
     adminOnly: true,
   } as SidebarItem & { adminOnly?: boolean },
   {
     label: "Settings",
-    to: "/settings",
+    to: "/admin/settings",
     icon: Settings,
+  },
+  // Website section (separator marker)
+  {
+    label: "Website",
+    icon: Globe,
+    adminOnly: true,
+    items: [
+      { label: "Inspections", to: "/admin/inspections", icon: Search },
+      { label: "Quotations", to: "/admin/quotations", icon: MessageSquare },
+      { label: "Properties", to: "/admin/properties-admin", icon: Home },
+      { label: "Testimonials", to: "/admin/testimonials-admin", icon: Star },
+      { label: "Messages", to: "/admin/contact-messages", icon: Mail },
+    ],
+  },
+  {
+    label: "View Website",
+    to: "/",
+    icon: Globe,
   },
 ];
 
 export function Sidebar({ collapsed, role }: SidebarProps) {
   const routerState = useRouterState();
   const pathname = routerState.location.pathname;
+  const websiteStore = useWebsiteStore();
+
+  // Badge counts
+  const badgeCounts: Record<string, number> = {
+    "/admin/inspections": websiteStore.inspections.filter(
+      (i) => i.status === "pending",
+    ).length,
+    "/admin/quotations": websiteStore.quotations.filter(
+      (q) => q.status === "pending",
+    ).length,
+    "/admin/contact-messages": websiteStore.contactMessages.filter(
+      (m) => m.status === "new",
+    ).length,
+  };
 
   const isActive = (path: string) =>
-    path === "/" ? pathname === "/" : pathname.startsWith(path);
+    path === "/admin"
+      ? pathname === "/admin" || pathname === "/admin/"
+      : pathname.startsWith(path);
 
   const getDefaultOpen = () => {
     const groups: Record<string, boolean> = {};
@@ -339,7 +388,15 @@ export function Sidebar({ collapsed, role }: SidebarProps) {
                         }}
                       >
                         <ChildIcon className="w-3.5 h-3.5 shrink-0" />
-                        <span className="truncate">{item.label}</span>
+                        <span className="flex-1 truncate">{item.label}</span>
+                        {badgeCounts[item.to] > 0 && (
+                          <span
+                            className="ml-1 shrink-0 min-w-[18px] h-[18px] px-1 rounded-full text-[10px] font-bold flex items-center justify-center"
+                            style={{ background: "#ef4444", color: "#fff" }}
+                          >
+                            {badgeCounts[item.to]}
+                          </span>
+                        )}
                       </Link>
                     );
                   })}

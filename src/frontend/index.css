@@ -130,6 +130,48 @@
   }
 }
 
+/* ─── Website Smooth Scroll ──────────────────────────────────── */
+html {
+  scroll-behavior: smooth;
+}
+
+/* ─── Website Animations ─────────────────────────────────────── */
+@keyframes scrollDown {
+  0% { transform: translateY(0); opacity: 0.7; }
+  50% { transform: translateY(6px); opacity: 1; }
+  100% { transform: translateY(0); opacity: 0.7; }
+}
+
+@keyframes heroFadeIn {
+  from { opacity: 0; transform: translateY(24px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.hero-fade-in {
+  animation: heroFadeIn 0.7s ease-out forwards;
+}
+
+.hero-fade-in-delay-1 {
+  animation: heroFadeIn 0.7s 0.15s ease-out both;
+}
+
+.hero-fade-in-delay-2 {
+  animation: heroFadeIn 0.7s 0.3s ease-out both;
+}
+
+.hero-fade-in-delay-3 {
+  animation: heroFadeIn 0.7s 0.45s ease-out both;
+}
+
+.hero-fade-in-delay-4 {
+  animation: heroFadeIn 0.7s 0.6s ease-out both;
+}
+
+/* ─── Website card 3D perspective ────────────────────────────── */
+.card-3d {
+  transform-style: preserve-3d;
+}
+
 /* ─── Utilities ──────────────────────────────────────────────── */
 @layer utilities {
   .font-display {

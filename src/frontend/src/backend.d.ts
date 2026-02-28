@@ -94,6 +94,8 @@ export interface backendInterface {
     createTechnician(name: string, phone: string): Promise<Technician>;
     createUser(name: string, role: Role): Promise<User>;
     deactivateTechnician(technicianId: bigint): Promise<boolean>;
+    deleteService(serviceId: bigint): Promise<boolean>;
+    deleteSubService(subServiceId: bigint): Promise<boolean>;
     generateInvoice(bookingId: bigint): Promise<Invoice | null>;
     getBookings(): Promise<Array<Booking>>;
     getServices(): Promise<Array<Service>>;
@@ -106,4 +108,5 @@ export interface backendInterface {
     seedData(): Promise<void>;
     seedSubServicesV2(): Promise<void>;
     updateBookingStatus(bookingId: bigint, newStatus: BookingStatus): Promise<boolean>;
+    updateSubServicePrice(subServiceId: bigint, newPrice: bigint): Promise<boolean>;
 }

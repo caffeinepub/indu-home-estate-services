@@ -6,17 +6,25 @@ import { Label } from "@/components/ui/label";
 import {
   useCreateService,
   useCreateSubService,
+  useDeleteService,
+  useDeleteSubService,
   useGetServices,
   useGetSubServicesByService,
+  useUpdateSubServicePrice,
 } from "@/hooks/useQueries";
+import { exportToCsv } from "@/utils/exportToExcel";
 import { useQueryClient } from "@tanstack/react-query";
 import {
+  Check,
   ChevronDown,
   ChevronUp,
+  Download,
   Loader2,
+  Pencil,
   Plus,
   Settings,
   Tag,
+  Trash2,
   X,
 } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
@@ -60,8 +68,9 @@ function AddServiceForm({ onCreated }: { onCreated: () => void }) {
       setPricingType("fixed");
       onCreated();
     } catch (err) {
-      const msg = err instanceof Error ? err.message : String(err);
-      toast.error(`Failed to create service: ${msg}`);
+      toast.error(
+        `Failed to create service: ${err instanceof Error ? err.message : String(err)}`,
+      );
     }
   };
 
@@ -188,8 +197,9 @@ function AddSubServiceForm({
       setPricingType("fixed");
       onCreated();
     } catch (err) {
-      const msg = err instanceof Error ? err.message : String(err);
-      toast.error(`Failed to create sub-service: ${msg}`);
+      toast.error(
+        `Failed to create sub-service: ${err instanceof Error ? err.message : String(err)}`,
+      );
     }
   };
 
@@ -258,6 +268,148 @@ function AddSubServiceForm({
   );
 }
 
+// ─── Inline Edit Price Row ───────────────────────────────────────
+function SubServiceRow({
+  sub,
+  serviceId,
+}: {
+  sub: SubService;
+  serviceId: bigint;
+}) {
+  const [editing, setEditing] = useState(false);
+  const [editPrice, setEditPrice] = useState(String(sub.basePrice));
+  const { mutateAsync: updatePrice, isPending: savingPrice } =
+    useUpdateSubServicePrice();
+  const { mutateAsync: deleteSub, isPending: deleting } = useDeleteSubService();
+  const queryClient = useQueryClient();
+
+  const pricingLabel = (pt: string) =>
+    pt === "per_sqft" ? "/sqft" : pt === "per_acre" ? "/acre" : "";
+
+  const handleSavePrice = async () => {
+    const price = Number(editPrice);
+    if (Number.isNaN(price) || price < 0) {
+      toast.error("Invalid price.");
+      return;
+    }
+    try {
+      await updatePrice({
+        subServiceId: sub.id,
+        newPrice: BigInt(Math.round(price)),
+      });
+      toast.success("Price updated.");
+      setEditing(false);
+      queryClient.invalidateQueries({
+        queryKey: ["subServices", serviceId.toString()],
+      });
+    } catch (err) {
+      toast.error(
+        `Failed to update price: ${err instanceof Error ? err.message : String(err)}`,
+      );
+    }
+  };
+
+  const handleDelete = async () => {
+    if (!window.confirm(`Delete "${sub.name}"? This cannot be undone.`)) return;
+    try {
+      await deleteSub({ subServiceId: sub.id });
+      toast.success(`"${sub.name}" deleted.`);
+      queryClient.invalidateQueries({
+        queryKey: ["subServices", serviceId.toString()],
+      });
+    } catch (err) {
+      toast.error(
+        `Failed to delete: ${err instanceof Error ? err.message : String(err)}`,
+      );
+    }
+  };
+
+  return (
+    <tr className="border-t border-border/40 hover:bg-muted/10 transition-colors group">
+      <td className="px-3 py-2 font-medium text-foreground text-xs">
+        {sub.name}
+      </td>
+      <td className="px-3 py-2 text-right text-xs">
+        {editing ? (
+          <div className="flex items-center justify-end gap-1">
+            <Input
+              type="number"
+              min="0"
+              value={editPrice}
+              onChange={(e) => setEditPrice(e.target.value)}
+              className="h-6 w-20 text-xs bg-background"
+              autoFocus
+            />
+            <button
+              type="button"
+              onClick={handleSavePrice}
+              disabled={savingPrice}
+              className="text-green-600 hover:text-green-700"
+              title="Save"
+            >
+              {savingPrice ? (
+                <Loader2 className="w-3.5 h-3.5 animate-spin" />
+              ) : (
+                <Check className="w-3.5 h-3.5" />
+              )}
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setEditing(false);
+                setEditPrice(String(sub.basePrice));
+              }}
+              className="text-muted-foreground hover:text-foreground"
+              title="Cancel"
+            >
+              <X className="w-3.5 h-3.5" />
+            </button>
+          </div>
+        ) : (
+          <span className="font-semibold text-foreground">
+            ₹{Number(sub.basePrice).toLocaleString("en-IN")}
+            {pricingLabel(sub.pricingType)}
+          </span>
+        )}
+      </td>
+      <td className="px-3 py-2 hidden sm:table-cell text-xs text-muted-foreground">
+        {sub.pricingType === "per_sqft"
+          ? "Per Sq Ft"
+          : sub.pricingType === "per_acre"
+            ? "Per Acre"
+            : "Fixed"}
+      </td>
+      <td className="px-3 py-2 text-right">
+        <div className="flex items-center justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+          {!editing && (
+            <button
+              type="button"
+              onClick={() => setEditing(true)}
+              className="text-muted-foreground hover:text-primary p-0.5"
+              title="Edit price"
+            >
+              <Pencil className="w-3 h-3" />
+            </button>
+          )}
+          <button
+            type="button"
+            onClick={handleDelete}
+            disabled={deleting}
+            className="text-muted-foreground hover:text-red-500 p-0.5"
+            title="Delete sub-service"
+          >
+            {deleting ? (
+              <Loader2 className="w-3 h-3 animate-spin" />
+            ) : (
+              <Trash2 className="w-3 h-3" />
+            )}
+          </button>
+        </div>
+      </td>
+    </tr>
+  );
+}
+
 // ─── Service Card with Sub-Services ─────────────────────────────
 function ServiceCard({
   service,
@@ -269,6 +421,8 @@ function ServiceCard({
   const [expanded, setExpanded] = useState(false);
   const [showAddSub, setShowAddSub] = useState(false);
   const queryClient = useQueryClient();
+  const { mutateAsync: deleteService, isPending: deletingService } =
+    useDeleteService();
 
   const { data: subServices = [], isLoading } = useGetSubServicesByService(
     expanded ? service.id : null,
@@ -290,12 +444,30 @@ function ServiceCard({
     return "bg-blue-50 text-blue-700 border-blue-200";
   };
 
+  const handleDeleteService = async () => {
+    if (
+      !window.confirm(
+        `Delete service "${service.name}" and ALL its sub-services? This cannot be undone.`,
+      )
+    )
+      return;
+    try {
+      await deleteService({ serviceId: service.id });
+      toast.success(`Service "${service.name}" deleted.`);
+      queryClient.invalidateQueries({ queryKey: ["services"] });
+    } catch (err) {
+      toast.error(
+        `Failed to delete service: ${err instanceof Error ? err.message : String(err)}`,
+      );
+    }
+  };
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 8 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: index * 0.04 }}
-      className="rounded-xl border border-[#E5E7EB] bg-white shadow-xs overflow-hidden"
+      className="rounded-xl border border-[#E5E7EB] bg-white shadow-xs overflow-hidden group/card"
     >
       {/* Service header row */}
       <div className="flex items-center justify-between p-4 gap-3">
@@ -324,6 +496,19 @@ function ServiceCard({
           </span>
           <button
             type="button"
+            onClick={handleDeleteService}
+            disabled={deletingService}
+            className="opacity-0 group-hover/card:opacity-100 transition-opacity text-muted-foreground hover:text-red-500 p-1"
+            title="Delete service"
+          >
+            {deletingService ? (
+              <Loader2 className="w-3.5 h-3.5 animate-spin" />
+            ) : (
+              <Trash2 className="w-3.5 h-3.5" />
+            )}
+          </button>
+          <button
+            type="button"
             onClick={() => setExpanded((p) => !p)}
             className="ml-1 text-muted-foreground hover:text-foreground transition-colors"
             title={expanded ? "Collapse" : "Expand sub-services"}
@@ -348,7 +533,6 @@ function ServiceCard({
             className="overflow-hidden border-t border-border"
           >
             <div className="p-4 space-y-3">
-              {/* Sub-services table */}
               {isLoading ? (
                 <p className="text-xs text-muted-foreground">
                   Loading sub-services...
@@ -370,40 +554,21 @@ function ServiceCard({
                       <th className="text-left px-3 py-2 text-muted-foreground font-semibold hidden sm:table-cell">
                         Type
                       </th>
+                      <th className="px-3 py-2 w-16" />
                     </tr>
                   </thead>
                   <tbody>
                     {subServices.map((sub: SubService) => (
-                      <tr
+                      <SubServiceRow
                         key={String(sub.id)}
-                        className="border-t border-border/40 hover:bg-muted/10 transition-colors"
-                      >
-                        <td className="px-3 py-2 font-medium text-foreground">
-                          {sub.name}
-                        </td>
-                        <td className="px-3 py-2 text-right font-semibold text-foreground">
-                          ₹{Number(sub.basePrice).toLocaleString("en-IN")}
-                          {sub.pricingType !== "fixed" && (
-                            <span className="font-normal text-muted-foreground ml-1">
-                              /
-                              {sub.pricingType === "per_sqft" ? "sqft" : "acre"}
-                            </span>
-                          )}
-                        </td>
-                        <td className="px-3 py-2 hidden sm:table-cell">
-                          <span
-                            className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium border ${pricingColor(sub.pricingType)}`}
-                          >
-                            {pricingLabel(sub.pricingType)}
-                          </span>
-                        </td>
-                      </tr>
+                        sub={sub}
+                        serviceId={service.id}
+                      />
                     ))}
                   </tbody>
                 </table>
               )}
 
-              {/* Toggle Add Sub-Service form */}
               {!showAddSub ? (
                 <Button
                   type="button"
@@ -448,8 +613,23 @@ function ServiceCard({
 export function AddServicePage() {
   const [showAddForm, setShowAddForm] = useState(false);
   const queryClient = useQueryClient();
-
   const { data: services = [], isLoading } = useGetServices();
+
+  const handleExportCsv = () => {
+    if (services.length === 0) {
+      toast.error("No services to export.");
+      return;
+    }
+    const rows = services.map((s) => ({
+      ID: String(s.id),
+      Name: s.name,
+      Category: s.category,
+      "Base Price": String(s.basePrice),
+      "Pricing Type": s.pricingType,
+    }));
+    exportToCsv("services.csv", rows);
+    toast.success("Services exported.");
+  };
 
   return (
     <div className="space-y-6">
@@ -463,23 +643,35 @@ export function AddServicePage() {
             services dynamically from this list.
           </p>
         </div>
-        <Button
-          type="button"
-          className="gap-2 shrink-0"
-          onClick={() => setShowAddForm((p) => !p)}
-        >
-          {showAddForm ? (
-            <>
-              <X className="h-4 w-4" />
-              Cancel
-            </>
-          ) : (
-            <>
-              <Plus className="h-4 w-4" />
-              New Service
-            </>
-          )}
-        </Button>
+        <div className="flex items-center gap-2 shrink-0">
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            className="gap-2 h-9"
+            onClick={handleExportCsv}
+          >
+            <Download className="h-4 w-4" />
+            Export CSV
+          </Button>
+          <Button
+            type="button"
+            className="gap-2"
+            onClick={() => setShowAddForm((p) => !p)}
+          >
+            {showAddForm ? (
+              <>
+                <X className="h-4 w-4" />
+                Cancel
+              </>
+            ) : (
+              <>
+                <Plus className="h-4 w-4" />
+                New Service
+              </>
+            )}
+          </Button>
+        </div>
       </div>
 
       {/* Add Service Form */}
@@ -520,7 +712,7 @@ export function AddServicePage() {
               : `${services.length} Service${services.length !== 1 ? "s" : ""}`}
           </h2>
           <span className="text-xs text-muted-foreground">
-            (click to expand sub-services)
+            (click ▼ to expand sub-services, hover for edit/delete)
           </span>
         </div>
 

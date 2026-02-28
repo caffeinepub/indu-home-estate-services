@@ -176,6 +176,8 @@ export interface backendInterface {
     createTechnician(name: string, phone: string): Promise<Technician>;
     createUser(name: string, role: Role): Promise<User>;
     deactivateTechnician(technicianId: bigint): Promise<boolean>;
+    deleteService(serviceId: bigint): Promise<boolean>;
+    deleteSubService(subServiceId: bigint): Promise<boolean>;
     generateInvoice(bookingId: bigint): Promise<Invoice | null>;
     getBookings(): Promise<Array<Booking>>;
     getServices(): Promise<Array<Service>>;
@@ -188,6 +190,7 @@ export interface backendInterface {
     seedData(): Promise<void>;
     seedSubServicesV2(): Promise<void>;
     updateBookingStatus(bookingId: bigint, newStatus: BookingStatus): Promise<boolean>;
+    updateSubServicePrice(subServiceId: bigint, newPrice: bigint): Promise<boolean>;
 }
 import type { Booking as _Booking, BookingStatus as _BookingStatus, Invoice as _Invoice, Role as _Role, User as _User } from "./declarations/backend.did.d.ts";
 export class Backend implements backendInterface {
@@ -301,6 +304,34 @@ export class Backend implements backendInterface {
             }
         } else {
             const result = await this.actor.deactivateTechnician(arg0);
+            return result;
+        }
+    }
+    async deleteService(arg0: bigint): Promise<boolean> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.deleteService(arg0);
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.deleteService(arg0);
+            return result;
+        }
+    }
+    async deleteSubService(arg0: bigint): Promise<boolean> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.deleteSubService(arg0);
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.deleteSubService(arg0);
             return result;
         }
     }
@@ -469,6 +500,20 @@ export class Backend implements backendInterface {
             }
         } else {
             const result = await this.actor.updateBookingStatus(arg0, to_candid_BookingStatus_n16(this._uploadFile, this._downloadFile, arg1));
+            return result;
+        }
+    }
+    async updateSubServicePrice(arg0: bigint, arg1: bigint): Promise<boolean> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.updateSubServicePrice(arg0, arg1);
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.updateSubServicePrice(arg0, arg1);
             return result;
         }
     }

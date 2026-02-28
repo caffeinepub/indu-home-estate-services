@@ -117,6 +117,8 @@ export const idlService = IDL.Service({
   'createTechnician' : IDL.Func([IDL.Text, IDL.Text], [Technician], []),
   'createUser' : IDL.Func([IDL.Text, Role], [User], []),
   'deactivateTechnician' : IDL.Func([IDL.Nat], [IDL.Bool], []),
+  'deleteService' : IDL.Func([IDL.Nat], [IDL.Bool], []),
+  'deleteSubService' : IDL.Func([IDL.Nat], [IDL.Bool], []),
   'generateInvoice' : IDL.Func([IDL.Nat], [IDL.Opt(Invoice)], ['query']),
   'getBookings' : IDL.Func([], [IDL.Vec(Booking)], ['query']),
   'getServices' : IDL.Func([], [IDL.Vec(Service)], ['query']),
@@ -133,6 +135,7 @@ export const idlService = IDL.Service({
   'seedData' : IDL.Func([], [], []),
   'seedSubServicesV2' : IDL.Func([], [], []),
   'updateBookingStatus' : IDL.Func([IDL.Nat, BookingStatus], [IDL.Bool], []),
+  'updateSubServicePrice' : IDL.Func([IDL.Nat, IDL.Nat], [IDL.Bool], []),
 });
 
 export const idlInitArgs = [];
@@ -247,6 +250,8 @@ export const idlFactory = ({ IDL }) => {
     'createTechnician' : IDL.Func([IDL.Text, IDL.Text], [Technician], []),
     'createUser' : IDL.Func([IDL.Text, Role], [User], []),
     'deactivateTechnician' : IDL.Func([IDL.Nat], [IDL.Bool], []),
+    'deleteService' : IDL.Func([IDL.Nat], [IDL.Bool], []),
+    'deleteSubService' : IDL.Func([IDL.Nat], [IDL.Bool], []),
     'generateInvoice' : IDL.Func([IDL.Nat], [IDL.Opt(Invoice)], ['query']),
     'getBookings' : IDL.Func([], [IDL.Vec(Booking)], ['query']),
     'getServices' : IDL.Func([], [IDL.Vec(Service)], ['query']),
@@ -263,6 +268,7 @@ export const idlFactory = ({ IDL }) => {
     'seedData' : IDL.Func([], [], []),
     'seedSubServicesV2' : IDL.Func([], [], []),
     'updateBookingStatus' : IDL.Func([IDL.Nat, BookingStatus], [IDL.Bool], []),
+    'updateSubServicePrice' : IDL.Func([IDL.Nat, IDL.Nat], [IDL.Bool], []),
   });
 };
 

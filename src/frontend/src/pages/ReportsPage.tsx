@@ -1,5 +1,6 @@
 import { PaymentBadge, StatusBadge } from "@/components/StatusBadge";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import {
   Select,
   SelectContent,
@@ -10,7 +11,15 @@ import {
 import { Skeleton } from "@/components/ui/skeleton";
 import { useGetBookings, useGetTechnicians } from "@/hooks/useQueries";
 import { useServiceMaps } from "@/hooks/useServiceMaps";
-import { BarChart3, TrendingUp, Users, Wallet, Wrench } from "lucide-react";
+import { exportToCsv } from "@/utils/exportToExcel";
+import {
+  BarChart3,
+  Download,
+  TrendingUp,
+  Users,
+  Wallet,
+  Wrench,
+} from "lucide-react";
 import { useMemo, useState } from "react";
 
 type DateFilter = "week" | "month" | "all";
@@ -88,6 +97,28 @@ export function ReportsPage() {
 
   const isLoading = bookingsLoading || techLoading;
 
+  const handleExport = () => {
+    if (filteredBookings.length === 0) return;
+    const rows = filteredBookings.map((b) => {
+      const subServiceName =
+        subServiceMap.get(b.subServiceId.toString()) ?? `#${b.subServiceId}`;
+      const serviceId = subServiceToServiceMap.get(b.subServiceId.toString());
+      const serviceName = serviceId ? (serviceMap.get(serviceId) ?? "") : "";
+      return {
+        "Booking ID": String(b.id),
+        Service: serviceName,
+        "Sub-Service": subServiceName,
+        Date: b.scheduledDate,
+        "Total Amount": String(b.totalAmount),
+        Advance: String(b.advanceAmount),
+        Balance: String(b.balanceAmount),
+        Status: b.status,
+        "Payment Status": b.paymentStatus,
+      };
+    });
+    exportToCsv("reports.csv", rows);
+  };
+
   return (
     <div className="space-y-6">
       {/* Page header */}
@@ -100,19 +131,31 @@ export function ReportsPage() {
             Financial overview, booking trends, and technician performance.
           </p>
         </div>
-        <Select
-          value={dateFilter}
-          onValueChange={(v) => setDateFilter(v as DateFilter)}
-        >
-          <SelectTrigger className="w-40 h-8 text-xs bg-background">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="week">This Week</SelectItem>
-            <SelectItem value="month">This Month</SelectItem>
-            <SelectItem value="all">All Time</SelectItem>
-          </SelectContent>
-        </Select>
+        <div className="flex items-center gap-2">
+          <Select
+            value={dateFilter}
+            onValueChange={(v) => setDateFilter(v as DateFilter)}
+          >
+            <SelectTrigger className="w-40 h-8 text-xs bg-background">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="week">This Week</SelectItem>
+              <SelectItem value="month">This Month</SelectItem>
+              <SelectItem value="all">All Time</SelectItem>
+            </SelectContent>
+          </Select>
+          <Button
+            size="sm"
+            variant="outline"
+            className="h-8 gap-1.5 text-xs"
+            onClick={handleExport}
+            disabled={filteredBookings.length === 0}
+          >
+            <Download className="h-3.5 w-3.5" />
+            Export CSV
+          </Button>
+        </div>
       </div>
 
       {/* Summary cards */}
