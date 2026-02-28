@@ -16,8 +16,8 @@ export default {
     },
     extend: {
       fontFamily: {
-        display: ["Fraunces", "Georgia", "serif"],
-        body: ["Outfit", "system-ui", "sans-serif"],
+        display: ["Bricolage Grotesque", "Plus Jakarta Sans", "system-ui", "sans-serif"],
+        body: ["Plus Jakarta Sans", "system-ui", "sans-serif"],
       },
       colors: {
         border: "oklch(var(--border))",

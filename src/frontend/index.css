@@ -4,72 +4,117 @@
 
 /* ─── Font Faces ─────────────────────────────────────────────── */
 @font-face {
-  font-family: "Fraunces";
-  src: url("/assets/fonts/Fraunces.woff2") format("woff2");
+  font-family: "Plus Jakarta Sans";
+  src: url("/assets/fonts/PlusJakartaSans.woff2") format("woff2");
   font-weight: 100 900;
   font-style: normal;
   font-display: swap;
 }
 
 @font-face {
-  font-family: "Outfit";
-  src: url("/assets/fonts/Outfit.woff2") format("woff2");
+  font-family: "Bricolage Grotesque";
+  src: url("/assets/fonts/BricolageGrotesque.woff2") format("woff2");
   font-weight: 100 900;
   font-style: normal;
   font-display: swap;
 }
 
-/* ─── Design Tokens ──────────────────────────────────────────── */
+/* ─── Enterprise Design Tokens ───────────────────────────────── */
 @layer base {
   :root {
     --radius: 0.5rem;
 
-    /* Warm terracotta + cream + forest green palette */
-    --background: 0.97 0.012 68;
-    --foreground: 0.22 0.03 42;
+    /* Enterprise Navy + Blue palette */
+    --background: 97.5 0.005 240;
+    --foreground: 15 0.04 250;
 
-    --card: 0.99 0.006 60;
-    --card-foreground: 0.22 0.03 42;
+    --card: 100 0 0;
+    --card-foreground: 15 0.04 250;
 
-    --popover: 0.99 0.006 60;
-    --popover-foreground: 0.22 0.03 42;
+    --popover: 100 0 0;
+    --popover-foreground: 15 0.04 250;
 
-    /* Terracotta primary */
-    --primary: 0.52 0.14 38;
-    --primary-foreground: 0.99 0.006 60;
+    /* Bright blue primary */
+    --primary: 55 0.18 240;
+    --primary-foreground: 100 0 0;
 
-    /* Soft sand secondary */
-    --secondary: 0.92 0.025 72;
-    --secondary-foreground: 0.32 0.04 42;
+    /* Light grey-blue secondary */
+    --secondary: 95 0.01 240;
+    --secondary-foreground: 28 0.04 250;
 
-    --muted: 0.94 0.018 68;
-    --muted-foreground: 0.52 0.03 52;
+    --muted: 93 0.008 240;
+    --muted-foreground: 55 0.01 250;
 
-    /* Forest green accent */
-    --accent: 0.44 0.1 148;
-    --accent-foreground: 0.99 0.006 60;
+    --accent: 90 0.02 240;
+    --accent-foreground: 28 0.04 250;
 
-    --destructive: 0.55 0.22 22;
-    --destructive-foreground: 0.99 0 0;
+    --destructive: 55 0.18 25;
+    --destructive-foreground: 100 0 0;
 
-    --border: 0.88 0.022 68;
-    --input: 0.88 0.022 68;
-    --ring: 0.52 0.14 38;
+    --border: 91 0.008 240;
+    --input: 91 0.008 240;
+    --ring: 55 0.18 240;
 
-    --chart-1: 0.52 0.14 38;
-    --chart-2: 0.44 0.1 148;
-    --chart-3: 0.62 0.12 52;
-    --chart-4: 0.72 0.1 80;
-    --chart-5: 0.38 0.08 220;
+    --chart-1: 55 0.18 240;
+    --chart-2: 55 0.15 160;
+    --chart-3: 65 0.15 80;
+    --chart-4: 55 0.18 25;
+    --chart-5: 55 0.14 290;
 
-    --sidebar: 0.95 0.018 68;
-    --sidebar-foreground: 0.22 0.03 42;
-    --sidebar-primary: 0.52 0.14 38;
-    --sidebar-primary-foreground: 0.99 0.006 60;
-    --sidebar-accent: 0.92 0.025 72;
-    --sidebar-accent-foreground: 0.32 0.04 42;
-    --sidebar-border: 0.88 0.022 68;
-    --sidebar-ring: 0.52 0.14 38;
+    /* Deep navy sidebar */
+    --sidebar: 22 0.065 255;
+    --sidebar-foreground: 92 0.01 240;
+    --sidebar-primary: 55 0.18 240;
+    --sidebar-primary-foreground: 100 0 0;
+    --sidebar-accent: 30 0.05 255;
+    --sidebar-accent-foreground: 92 0.01 240;
+    --sidebar-border: 28 0.05 255;
+    --sidebar-ring: 55 0.18 240;
+  }
+
+  .dark {
+    --background: 12 0.03 250;
+    --foreground: 95 0.01 240;
+
+    --card: 16 0.04 252;
+    --card-foreground: 95 0.01 240;
+
+    --popover: 16 0.04 252;
+    --popover-foreground: 95 0.01 240;
+
+    --primary: 60 0.18 240;
+    --primary-foreground: 100 0 0;
+
+    --secondary: 22 0.04 252;
+    --secondary-foreground: 92 0.01 240;
+
+    --muted: 20 0.03 252;
+    --muted-foreground: 65 0.01 250;
+
+    --accent: 22 0.04 252;
+    --accent-foreground: 92 0.01 240;
+
+    --destructive: 55 0.18 25;
+    --destructive-foreground: 100 0 0;
+
+    --border: 25 0.04 252;
+    --input: 25 0.04 252;
+    --ring: 60 0.18 240;
+
+    --chart-1: 60 0.18 240;
+    --chart-2: 55 0.15 160;
+    --chart-3: 65 0.15 80;
+    --chart-4: 55 0.18 25;
+    --chart-5: 55 0.14 290;
+
+    --sidebar: 10 0.04 255;
+    --sidebar-foreground: 90 0.01 240;
+    --sidebar-primary: 60 0.18 240;
+    --sidebar-primary-foreground: 100 0 0;
+    --sidebar-accent: 18 0.05 255;
+    --sidebar-accent-foreground: 90 0.01 240;
+    --sidebar-border: 20 0.05 255;
+    --sidebar-ring: 60 0.18 240;
   }
 
   * {
@@ -85,38 +130,42 @@
 /* ─── Utilities ──────────────────────────────────────────────── */
 @layer utilities {
   .font-display {
-    font-family: "Fraunces", Georgia, serif;
+    font-family: "Bricolage Grotesque", "Plus Jakarta Sans", system-ui, sans-serif;
   }
   .font-body {
-    font-family: "Outfit", system-ui, sans-serif;
+    font-family: "Plus Jakarta Sans", system-ui, sans-serif;
   }
 
-  /* Diagonal hatch pattern for header background */
-  .bg-hatch {
-    background-image: repeating-linear-gradient(
-      -45deg,
-      oklch(var(--primary) / 0.08) 0px,
-      oklch(var(--primary) / 0.08) 1px,
-      transparent 1px,
-      transparent 8px
-    );
+  /* Sidebar active indicator */
+  .sidebar-active-indicator {
+    position: relative;
+  }
+  .sidebar-active-indicator::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 3px;
+    background: oklch(55 0.18 240);
+    border-radius: 0 2px 2px 0;
   }
 
   .role-admin {
-    background-color: oklch(0.52 0.14 38 / 0.12);
-    color: oklch(0.42 0.12 38);
-    border-color: oklch(0.52 0.14 38 / 0.3);
+    background-color: oklch(60 0.18 240 / 0.12);
+    color: oklch(45 0.18 240);
+    border-color: oklch(60 0.18 240 / 0.3);
   }
 
   .role-technician {
-    background-color: oklch(0.44 0.1 148 / 0.12);
-    color: oklch(0.34 0.1 148);
-    border-color: oklch(0.44 0.1 148 / 0.3);
+    background-color: oklch(55 0.15 160 / 0.12);
+    color: oklch(40 0.15 160);
+    border-color: oklch(55 0.15 160 / 0.3);
   }
 
   .role-customer {
-    background-color: oklch(0.55 0.1 220 / 0.12);
-    color: oklch(0.38 0.1 220);
-    border-color: oklch(0.55 0.1 220 / 0.3);
+    background-color: oklch(65 0.15 80 / 0.12);
+    color: oklch(50 0.15 80);
+    border-color: oklch(65 0.15 80 / 0.3);
   }
 }
