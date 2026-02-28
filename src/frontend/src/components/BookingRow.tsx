@@ -41,7 +41,7 @@ import { toast } from "sonner";
 
 export function BookingRowSkeleton() {
   return (
-    <div className="flex flex-col gap-2 px-4 py-3 rounded-lg border border-border">
+    <div className="flex flex-col gap-2 px-4 py-3 rounded-lg border border-[#E5E7EB] bg-white shadow-xs">
       <div className="flex items-center justify-between">
         <Skeleton className="h-4 w-16" />
         <Skeleton className="h-5 w-20 rounded-full" />
@@ -199,7 +199,7 @@ export function BookingRow({
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.25, delay: index * 0.04 }}
-        className="rounded-lg border border-border bg-card px-4 py-3 space-y-2 hover:border-primary/25 transition-colors"
+        className="rounded-lg border border-[#E5E7EB] bg-white px-4 py-3 space-y-2 shadow-xs hover:border-primary/30 transition-colors"
       >
         {/* Row 1: ID + status badges + admin status dropdown */}
         <div className="flex items-center justify-between gap-2 flex-wrap">

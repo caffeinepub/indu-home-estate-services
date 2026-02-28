@@ -23,8 +23,8 @@ export function SettingsPage() {
       </div>
 
       {/* Company Info */}
-      <section className="rounded-xl border border-border bg-card shadow-xs overflow-hidden">
-        <div className="px-5 py-4 border-b border-border flex items-center gap-2">
+      <section className="rounded-xl border border-[#E5E7EB] bg-white shadow-xs overflow-hidden">
+        <div className="px-5 py-4 border-b border-[#E5E7EB] flex items-center gap-2">
           <Building2 className="w-4 h-4 text-muted-foreground" />
           <h2 className="font-semibold text-foreground text-sm">
             Company Information
@@ -58,8 +58,8 @@ export function SettingsPage() {
       </section>
 
       {/* Financial Settings */}
-      <section className="rounded-xl border border-border bg-card shadow-xs overflow-hidden">
-        <div className="px-5 py-4 border-b border-border flex items-center gap-2">
+      <section className="rounded-xl border border-[#E5E7EB] bg-white shadow-xs overflow-hidden">
+        <div className="px-5 py-4 border-b border-[#E5E7EB] flex items-center gap-2">
           <Percent className="w-4 h-4 text-muted-foreground" />
           <h2 className="font-semibold text-foreground text-sm">
             Financial Settings
@@ -109,8 +109,8 @@ export function SettingsPage() {
       </section>
 
       {/* Appearance */}
-      <section className="rounded-xl border border-border bg-card shadow-xs overflow-hidden">
-        <div className="px-5 py-4 border-b border-border flex items-center gap-2">
+      <section className="rounded-xl border border-[#E5E7EB] bg-white shadow-xs overflow-hidden">
+        <div className="px-5 py-4 border-b border-[#E5E7EB] flex items-center gap-2">
           <Palette className="w-4 h-4 text-muted-foreground" />
           <h2 className="font-semibold text-foreground text-sm">Appearance</h2>
         </div>
@@ -140,8 +140,8 @@ export function SettingsPage() {
       </section>
 
       {/* Logo Upload */}
-      <section className="rounded-xl border border-border bg-card shadow-xs overflow-hidden">
-        <div className="px-5 py-4 border-b border-border flex items-center gap-2">
+      <section className="rounded-xl border border-[#E5E7EB] bg-white shadow-xs overflow-hidden">
+        <div className="px-5 py-4 border-b border-[#E5E7EB] flex items-center gap-2">
           <Upload className="w-4 h-4 text-muted-foreground" />
           <h2 className="font-semibold text-foreground text-sm">
             Company Logo

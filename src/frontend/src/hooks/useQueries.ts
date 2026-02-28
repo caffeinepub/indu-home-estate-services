@@ -1,9 +1,4 @@
-import {
-  useMutation,
-  useQueries,
-  useQuery,
-  useQueryClient,
-} from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type {
   Booking,
   Invoice,
@@ -50,6 +45,32 @@ export function useGetServices() {
       return actor.getServices();
     },
     enabled: !!actor && !isFetching,
+    staleTime: 0,
+    refetchOnMount: true,
+  });
+}
+
+export function useCreateService() {
+  const { actor } = useActor();
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({
+      name,
+      category,
+      basePrice,
+      pricingType,
+    }: {
+      name: string;
+      category: string;
+      basePrice: bigint;
+      pricingType: string;
+    }): Promise<Service> => {
+      if (!actor) throw new Error("No actor available");
+      return actor.createService(name, category, basePrice, pricingType);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["services"] });
+    },
   });
 }
 
@@ -62,6 +83,35 @@ export function useGetSubServicesByService(serviceId: bigint | null) {
       return actor.getSubServicesByService(serviceId);
     },
     enabled: !!actor && !isFetching && serviceId !== null,
+    staleTime: 0,
+    refetchOnMount: true,
+  });
+}
+
+export function useCreateSubService() {
+  const { actor } = useActor();
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({
+      serviceId,
+      name,
+      basePrice,
+      pricingType,
+    }: {
+      serviceId: bigint;
+      name: string;
+      basePrice: bigint;
+      pricingType: string;
+    }): Promise<SubService> => {
+      if (!actor) throw new Error("No actor available");
+      return actor.createSubService(serviceId, name, basePrice, pricingType);
+    },
+    onSuccess: (_data, variables) => {
+      queryClient.invalidateQueries({
+        queryKey: ["subServices", variables.serviceId.toString()],
+      });
+      queryClient.invalidateQueries({ queryKey: ["allSubServices"] });
+    },
   });
 }
 
@@ -140,20 +190,6 @@ export function useUpdateBookingStatus() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["bookings"] });
     },
-  });
-}
-
-export function useGetAllSubServices(serviceIds: bigint[]) {
-  const { actor, isFetching } = useActor();
-  return useQueries({
-    queries: serviceIds.map((id) => ({
-      queryKey: ["subServices", id.toString()],
-      queryFn: async () => {
-        if (!actor) return [] as SubService[];
-        return actor.getSubServicesByService(id);
-      },
-      enabled: !!actor && !isFetching,
-    })),
   });
 }
 

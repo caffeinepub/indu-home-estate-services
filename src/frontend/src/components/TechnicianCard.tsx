@@ -29,7 +29,7 @@ export function TechnicianCard({ tech, index, isAdmin }: TechnicianCardProps) {
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.25, delay: index * 0.05 }}
-      className="flex items-center gap-4 px-4 py-3 rounded-lg bg-card border border-border hover:border-primary/30 transition-colors"
+      className="flex items-center gap-4 px-4 py-3 rounded-lg bg-white border border-[#E5E7EB] shadow-xs hover:border-primary/30 transition-colors"
     >
       <div className="w-9 h-9 rounded-full bg-emerald-50 border border-emerald-200 flex items-center justify-center shrink-0">
         <Wrench className="w-4 h-4 text-emerald-700" />

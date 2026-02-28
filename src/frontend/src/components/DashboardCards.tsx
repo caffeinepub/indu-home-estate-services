@@ -1,6 +1,6 @@
 import { Skeleton } from "@/components/ui/skeleton";
-import { SERVICES, SUB_SERVICES } from "@/constants/catalog";
 import { useGetBookings } from "@/hooks/useQueries";
+import { useServiceMaps } from "@/hooks/useServiceMaps";
 import { BookingStatus } from "@/lib/helpers";
 import {
   AlertCircle,
@@ -9,7 +9,6 @@ import {
   BookOpen,
   CalendarDays,
   CheckCircle2,
-  ClipboardList,
   LayoutDashboard,
   TrendingUp,
   Wallet,
@@ -20,18 +19,7 @@ import { useMemo } from "react";
 
 export function DashboardCards() {
   const { data: bookings, isLoading } = useGetBookings();
-
-  const subServiceToServiceMap = useMemo(() => {
-    const map = new Map<string, string>();
-    for (const ss of SUB_SERVICES) map.set(ss.id, ss.serviceId);
-    return map;
-  }, []);
-
-  const serviceMap = useMemo(() => {
-    const map = new Map<string, string>();
-    for (const s of SERVICES) map.set(s.id, s.name);
-    return map;
-  }, []);
+  const { subServiceToServiceMap, serviceMap } = useServiceMaps();
 
   const todayStart = useMemo(() => {
     const d = new Date();
@@ -117,8 +105,9 @@ export function DashboardCards() {
       label: "Total Bookings",
       value: isLoading ? null : String(stats.totalBookings),
       icon: BookOpen,
-      iconClass: "text-primary",
-      bgClass: "bg-primary/8",
+      iconColor: "#2563EB",
+      bgColor: "#DBEAFE",
+      valueColor: "#111827",
     },
     {
       label: "Total Revenue",
@@ -126,8 +115,9 @@ export function DashboardCards() {
         ? null
         : `₹${stats.totalRevenue.toLocaleString("en-IN")}`,
       icon: TrendingUp,
-      iconClass: "text-emerald-700",
-      bgClass: "bg-emerald-50",
+      iconColor: "#16A34A",
+      bgColor: "#DCFCE7",
+      valueColor: "#16A34A",
     },
     {
       label: "Advance Collected",
@@ -135,8 +125,9 @@ export function DashboardCards() {
         ? null
         : `₹${stats.totalAdvance.toLocaleString("en-IN")}`,
       icon: Wallet,
-      iconClass: "text-blue-700",
-      bgClass: "bg-blue-50",
+      iconColor: "#2563EB",
+      bgColor: "#DBEAFE",
+      valueColor: "#2563EB",
     },
     {
       label: "Pending Balance",
@@ -144,8 +135,9 @@ export function DashboardCards() {
         ? null
         : `₹${(stats.totalRevenue + stats.totalAdvance > 0n ? stats.totalRevenue - stats.totalAdvance : 0n).toLocaleString("en-IN")}`,
       icon: AlertCircle,
-      iconClass: "text-amber-700",
-      bgClass: "bg-amber-50",
+      iconColor: "#EA580C",
+      bgColor: "#FFEDD5",
+      valueColor: "#EA580C",
     },
     {
       label: "Technician Payout (40%)",
@@ -153,8 +145,9 @@ export function DashboardCards() {
         ? null
         : `₹${stats.totalCommission.toLocaleString("en-IN")}`,
       icon: BadgePercent,
-      iconClass: "text-amber-700",
-      bgClass: "bg-amber-50",
+      iconColor: "#EA580C",
+      bgColor: "#FFEDD5",
+      valueColor: "#EA580C",
     },
     {
       label: "Net Company Profit (60%)",
@@ -162,29 +155,33 @@ export function DashboardCards() {
         ? null
         : `₹${stats.totalCompanyProfit.toLocaleString("en-IN")}`,
       icon: TrendingUp,
-      iconClass: "text-primary",
-      bgClass: "bg-primary/8",
+      iconColor: "#2563EB",
+      bgColor: "#DBEAFE",
+      valueColor: "#2563EB",
     },
     {
       label: "Today's Bookings",
       value: isLoading ? null : String(stats.todayBookings),
       icon: CalendarDays,
-      iconClass: "text-primary",
-      bgClass: "bg-primary/8",
+      iconColor: "#2563EB",
+      bgColor: "#DBEAFE",
+      valueColor: "#111827",
     },
     {
       label: "Completed Bookings",
       value: isLoading ? null : String(stats.completedBookings),
       icon: CheckCircle2,
-      iconClass: "text-emerald-700",
-      bgClass: "bg-emerald-50",
+      iconColor: "#16A34A",
+      bgColor: "#DCFCE7",
+      valueColor: "#16A34A",
     },
     {
       label: "Cancelled Bookings",
       value: isLoading ? null : String(stats.cancelledBookings),
       icon: XCircle,
-      iconClass: "text-red-500",
-      bgClass: "bg-red-50",
+      iconColor: "#DC2626",
+      bgColor: "#FEE2E2",
+      valueColor: "#DC2626",
     },
   ];
 
@@ -206,12 +203,16 @@ export function DashboardCards() {
               initial={{ opacity: 0, y: 8 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.3 }}
-              className="rounded-xl border border-border bg-card p-4 flex flex-col gap-3 shadow-xs"
+              className="rounded-xl border border-[#E5E7EB] bg-white p-4 flex flex-col gap-3 shadow-xs"
             >
               <div
-                className={`w-9 h-9 rounded-lg ${card.bgClass} flex items-center justify-center`}
+                className="w-9 h-9 rounded-lg flex items-center justify-center"
+                style={{ backgroundColor: card.bgColor }}
               >
-                <Icon className={`w-4.5 h-4.5 ${card.iconClass}`} />
+                <Icon
+                  className="w-4.5 h-4.5"
+                  style={{ color: card.iconColor }}
+                />
               </div>
               <div>
                 {isLoading ? (
@@ -221,7 +222,10 @@ export function DashboardCards() {
                   </>
                 ) : (
                   <>
-                    <p className="font-display text-2xl font-semibold text-foreground leading-none">
+                    <p
+                      className="font-display text-2xl font-semibold leading-none"
+                      style={{ color: card.valueColor }}
+                    >
                       {card.value}
                     </p>
                     <p className="text-xs text-muted-foreground mt-1.5">
@@ -244,7 +248,7 @@ export function DashboardCards() {
               Bookings by Service
             </h3>
           </div>
-          <div className="rounded-xl border border-border bg-card p-4 space-y-3">
+          <div className="rounded-xl border border-[#E5E7EB] bg-white p-4 space-y-3 shadow-xs">
             {serviceBookingCounts.map(({ name, count, pct }) => (
               <div key={name} className="space-y-1">
                 <div className="flex items-center justify-between text-xs">

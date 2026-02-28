@@ -11,7 +11,7 @@ export function CreateBookingPage() {
           Select a service and fill in the details to create a new booking.
         </p>
       </div>
-      <div className="rounded-xl border border-border bg-card shadow-xs p-5 sm:p-6">
+      <div className="rounded-xl border border-[#E5E7EB] bg-white shadow-xs p-5 sm:p-6">
         <BookingForm />
       </div>
     </div>

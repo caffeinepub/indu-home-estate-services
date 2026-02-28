@@ -24,97 +24,100 @@
   :root {
     --radius: 0.5rem;
 
-    /* Enterprise Navy + Blue palette */
-    --background: 97.5 0.005 240;
-    --foreground: 15 0.04 250;
+    /* Enterprise palette — #F3F4F6 bg, #ffffff cards, #E5E7EB border, #111827 text */
+    /* OKLCH L is 0–1 scale in CSS4. Values: #F3F4F6≈0.965, #111827≈0.145, #ffffff=1.0 */
+    --background: 0.965 0.004 247;   /* #F3F4F6 light grey */
+    --foreground: 0.145 0.036 264;   /* #111827 near-black */
 
-    --card: 100 0 0;
-    --card-foreground: 15 0.04 250;
+    --card: 1 0 0;                   /* #ffffff pure white */
+    --card-foreground: 0.145 0.036 264;
 
-    --popover: 100 0 0;
-    --popover-foreground: 15 0.04 250;
+    --popover: 1 0 0;
+    --popover-foreground: 0.145 0.036 264;
 
-    /* Bright blue primary */
-    --primary: 55 0.18 240;
-    --primary-foreground: 100 0 0;
+    /* Bright blue primary #2563EB ≈ oklch(0.527 0.197 255) */
+    --primary: 0.527 0.197 255;
+    --primary-foreground: 1 0 0;
 
-    /* Light grey-blue secondary */
-    --secondary: 95 0.01 240;
-    --secondary-foreground: 28 0.04 250;
+    /* Light grey secondary */
+    --secondary: 0.96 0.004 247;
+    --secondary-foreground: 0.20 0.036 264;
 
-    --muted: 93 0.008 240;
-    --muted-foreground: 55 0.01 250;
+    /* Muted: slightly darker grey */
+    --muted: 0.94 0.004 247;
+    --muted-foreground: 0.52 0.012 264;
 
-    --accent: 90 0.02 240;
-    --accent-foreground: 28 0.04 250;
+    --accent: 0.92 0.005 247;
+    --accent-foreground: 0.20 0.036 264;
 
-    --destructive: 55 0.18 25;
-    --destructive-foreground: 100 0 0;
+    /* Destructive red */
+    --destructive: 0.55 0.18 25;
+    --destructive-foreground: 1 0 0;
 
-    --border: 91 0.008 240;
-    --input: 91 0.008 240;
-    --ring: 55 0.18 240;
+    --border: 0.915 0.005 257;       /* #E5E7EB */
+    --input: 0.915 0.005 257;
+    --ring: 0.527 0.197 255;
 
-    --chart-1: 55 0.18 240;
-    --chart-2: 55 0.15 160;
-    --chart-3: 65 0.15 80;
-    --chart-4: 55 0.18 25;
-    --chart-5: 55 0.14 290;
+    --chart-1: 0.527 0.197 255;
+    --chart-2: 0.55 0.15 160;
+    --chart-3: 0.65 0.15 80;
+    --chart-4: 0.55 0.18 25;
+    --chart-5: 0.55 0.14 290;
 
-    /* Deep navy sidebar */
-    --sidebar: 22 0.065 255;
-    --sidebar-foreground: 92 0.01 240;
-    --sidebar-primary: 55 0.18 240;
-    --sidebar-primary-foreground: 100 0 0;
-    --sidebar-accent: 30 0.05 255;
-    --sidebar-accent-foreground: 92 0.01 240;
-    --sidebar-border: 28 0.05 255;
-    --sidebar-ring: 55 0.18 240;
+    /* Deep navy sidebar — #111827 bg, #E5E7EB text, #2563EB active, #1F2937 hover */
+    --sidebar: 0.174 0.036 259;         /* #111827 */
+    --sidebar-foreground: 0.918 0.005 253; /* #E5E7EB */
+    --sidebar-primary: 0.527 0.197 255;    /* #2563EB */
+    --sidebar-primary-foreground: 1 0 0;
+    --sidebar-accent: 0.214 0.03 258;      /* #1F2937 */
+    --sidebar-accent-foreground: 0.918 0.005 253;
+    --sidebar-border: 0.22 0.028 258;
+    --sidebar-ring: 0.527 0.197 255;
   }
 
   .dark {
-    --background: 12 0.03 250;
-    --foreground: 95 0.01 240;
+    --background: 0.12 0.03 250;
+    --foreground: 0.95 0.01 240;
 
-    --card: 16 0.04 252;
-    --card-foreground: 95 0.01 240;
+    --card: 0.16 0.04 252;
+    --card-foreground: 0.95 0.01 240;
 
-    --popover: 16 0.04 252;
-    --popover-foreground: 95 0.01 240;
+    --popover: 0.16 0.04 252;
+    --popover-foreground: 0.95 0.01 240;
 
-    --primary: 60 0.18 240;
-    --primary-foreground: 100 0 0;
+    --primary: 0.60 0.18 240;
+    --primary-foreground: 1 0 0;
 
-    --secondary: 22 0.04 252;
-    --secondary-foreground: 92 0.01 240;
+    --secondary: 0.22 0.04 252;
+    --secondary-foreground: 0.92 0.01 240;
 
-    --muted: 20 0.03 252;
-    --muted-foreground: 65 0.01 250;
+    --muted: 0.20 0.03 252;
+    --muted-foreground: 0.65 0.01 250;
 
-    --accent: 22 0.04 252;
-    --accent-foreground: 92 0.01 240;
+    --accent: 0.22 0.04 252;
+    --accent-foreground: 0.92 0.01 240;
 
-    --destructive: 55 0.18 25;
-    --destructive-foreground: 100 0 0;
+    --destructive: 0.55 0.18 25;
+    --destructive-foreground: 1 0 0;
 
-    --border: 25 0.04 252;
-    --input: 25 0.04 252;
-    --ring: 60 0.18 240;
+    --border: 0.25 0.04 252;
+    --input: 0.25 0.04 252;
+    --ring: 0.60 0.18 240;
 
-    --chart-1: 60 0.18 240;
-    --chart-2: 55 0.15 160;
-    --chart-3: 65 0.15 80;
-    --chart-4: 55 0.18 25;
-    --chart-5: 55 0.14 290;
+    --chart-1: 0.60 0.18 240;
+    --chart-2: 0.55 0.15 160;
+    --chart-3: 0.65 0.15 80;
+    --chart-4: 0.55 0.18 25;
+    --chart-5: 0.55 0.14 290;
 
-    --sidebar: 10 0.04 255;
-    --sidebar-foreground: 90 0.01 240;
-    --sidebar-primary: 60 0.18 240;
-    --sidebar-primary-foreground: 100 0 0;
-    --sidebar-accent: 18 0.05 255;
-    --sidebar-accent-foreground: 90 0.01 240;
-    --sidebar-border: 20 0.05 255;
-    --sidebar-ring: 60 0.18 240;
+    --sidebar: 0.174 0.036 259;
+    --sidebar-foreground: 0.918 0.005 253;
+    --sidebar-primary: 0.527 0.197 255;
+    --sidebar-primary-foreground: 1 0 0;
+    --sidebar-accent: 0.214 0.03 258;
+    --sidebar-accent-foreground: 0.918 0.005 253;
+    --sidebar-border: 0.22 0.028 258;
+    --sidebar-ring: 0.527 0.197 255;
   }
 
   * {
@@ -147,25 +150,25 @@
     top: 0;
     bottom: 0;
     width: 3px;
-    background: oklch(55 0.18 240);
+    background: oklch(0.527 0.197 255);
     border-radius: 0 2px 2px 0;
   }
 
   .role-admin {
-    background-color: oklch(60 0.18 240 / 0.12);
-    color: oklch(45 0.18 240);
-    border-color: oklch(60 0.18 240 / 0.3);
+    background-color: oklch(0.60 0.18 240 / 0.12);
+    color: oklch(0.45 0.18 240);
+    border-color: oklch(0.60 0.18 240 / 0.3);
   }
 
   .role-technician {
-    background-color: oklch(55 0.15 160 / 0.12);
-    color: oklch(40 0.15 160);
-    border-color: oklch(55 0.15 160 / 0.3);
+    background-color: oklch(0.55 0.15 160 / 0.12);
+    color: oklch(0.40 0.15 160);
+    border-color: oklch(0.55 0.15 160 / 0.3);
   }
 
   .role-customer {
-    background-color: oklch(65 0.15 80 / 0.12);
-    color: oklch(50 0.15 80);
-    border-color: oklch(65 0.15 80 / 0.3);
+    background-color: oklch(0.65 0.15 80 / 0.12);
+    color: oklch(0.50 0.15 80);
+    border-color: oklch(0.65 0.15 80 / 0.3);
   }
 }

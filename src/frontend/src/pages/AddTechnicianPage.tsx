@@ -39,7 +39,7 @@ export function AddTechnicianPage() {
         </p>
       </div>
 
-      <div className="rounded-xl border border-border bg-card shadow-xs p-5 sm:p-6">
+      <div className="rounded-xl border border-[#E5E7EB] bg-white shadow-xs p-5 sm:p-6">
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div className="space-y-1.5">

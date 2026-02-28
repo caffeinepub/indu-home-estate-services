@@ -2,8 +2,11 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { SERVICES, SUB_SERVICES } from "@/constants/catalog";
-import { useCreateBooking } from "@/hooks/useQueries";
+import {
+  useCreateBooking,
+  useGetServices,
+  useGetSubServicesByService,
+} from "@/hooks/useQueries";
 import { TIME_SLOTS, sendWhatsAppNotification } from "@/lib/helpers";
 import { useQueryClient } from "@tanstack/react-query";
 import {
@@ -31,20 +34,26 @@ export function BookingForm() {
   const [whatsappMsg, setWhatsappMsg] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
 
-  const filteredSubServices = SUB_SERVICES.filter(
-    (sub) => sub.serviceId === serviceId,
+  // Load services from backend
+  const { data: services = [], isLoading: servicesLoading } = useGetServices();
+
+  // Load sub-services for selected service from backend
+  const selectedServiceId = serviceId ? BigInt(serviceId) : null;
+  const { data: subServices = [], isLoading: subServicesLoading } =
+    useGetSubServicesByService(selectedServiceId);
+
+  const selectedSubService = subServices.find(
+    (ss) => String(ss.id) === subServiceId,
   );
 
-  const selectedSubService = filteredSubServices.find(
-    (ss) => ss.id === subServiceId,
-  );
   const qty = Number(quantity) || 1;
   let computedTotal = 0;
   if (selectedSubService) {
+    const basePrice = Number(selectedSubService.basePrice);
     if (selectedSubService.pricingType === "fixed") {
-      computedTotal = selectedSubService.price;
+      computedTotal = basePrice;
     } else {
-      computedTotal = selectedSubService.price * qty;
+      computedTotal = basePrice * qty;
     }
     if (computedTotal < 1000) computedTotal = 1000;
   }
@@ -82,9 +91,7 @@ export function BookingForm() {
     }
 
     try {
-      const numericSubServiceId = /^\d+$/.test(subServiceId)
-        ? BigInt(subServiceId)
-        : 0n;
+      const numericSubServiceId = BigInt(subServiceId);
 
       const booking = await createBooking({
         customerId: 0n,
@@ -104,12 +111,9 @@ export function BookingForm() {
         type: "active",
       });
 
-      const selectedSubSvc = filteredSubServices.find(
-        (ss) => ss.id === subServiceId,
-      );
-      const subServiceName = selectedSubSvc?.name ?? "Service";
-      const serviceName =
-        SERVICES.find((s) => s.id === serviceId)?.name ?? serviceId;
+      const selectedService = services.find((s) => String(s.id) === serviceId);
+      const serviceName = selectedService?.name ?? "Service";
+      const subServiceName = selectedSubService?.name ?? "Sub-service";
 
       sendWhatsAppNotification("confirmed", {
         to: "+91XXXXXXXXXX",
@@ -129,8 +133,9 @@ export function BookingForm() {
       setScheduledTime("");
       setAddress("");
       setNotes("");
-    } catch {
-      toast.error("Failed to create booking. Please try again.");
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
+      toast.error(`Booking failed: ${message}`);
     }
   };
 
@@ -164,13 +169,20 @@ export function BookingForm() {
           }}
           className="w-full h-10 rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
         >
-          <option value="">Select a service</option>
-          {SERVICES.map((service) => (
-            <option key={service.id} value={service.id}>
+          <option value="">
+            {servicesLoading ? "Loading services..." : "Select a service"}
+          </option>
+          {services.map((service) => (
+            <option key={String(service.id)} value={String(service.id)}>
               {service.name}
             </option>
           ))}
         </select>
+        {!servicesLoading && services.length === 0 && (
+          <p className="text-xs text-amber-700">
+            No services found. Please add services from the Services section.
+          </p>
+        )}
       </div>
 
       {/* SubService dropdown */}
@@ -188,10 +200,14 @@ export function BookingForm() {
           className="w-full h-10 rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
         >
           <option value="">
-            {serviceId ? "Select a sub-service" : "Select a service first"}
+            {subServicesLoading
+              ? "Loading..."
+              : serviceId
+                ? "Select a sub-service"
+                : "Select a service first"}
           </option>
-          {filteredSubServices.map((sub) => (
-            <option key={sub.id} value={sub.id}>
+          {subServices.map((sub) => (
+            <option key={String(sub.id)} value={String(sub.id)}>
               {sub.name}
             </option>
           ))}
@@ -215,7 +231,8 @@ export function BookingForm() {
               <div className="flex items-center justify-between">
                 <span className="text-muted-foreground">Base Price</span>
                 <span className="text-foreground font-medium">
-                  ₹{selectedSubService.price.toLocaleString("en-IN")}
+                  ₹
+                  {Number(selectedSubService.basePrice).toLocaleString("en-IN")}
                   {selectedSubService.pricingType !== "fixed" && (
                     <span className="text-muted-foreground font-normal text-xs ml-1">
                       per{" "}

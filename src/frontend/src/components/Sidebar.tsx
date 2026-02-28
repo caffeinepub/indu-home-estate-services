@@ -191,7 +191,7 @@ export function Sidebar({ collapsed, role }: SidebarProps) {
                   onMouseEnter={(e) => {
                     if (!active)
                       (e.currentTarget as HTMLElement).style.background =
-                        "oklch(var(--sidebar-accent) / 0.5)";
+                        "oklch(var(--sidebar-accent))";
                   }}
                   onMouseLeave={(e) => {
                     if (!active)
@@ -220,7 +220,7 @@ export function Sidebar({ collapsed, role }: SidebarProps) {
                 onMouseEnter={(e) => {
                   if (!active)
                     (e.currentTarget as HTMLElement).style.background =
-                      "oklch(var(--sidebar-accent) / 0.5)";
+                      "oklch(var(--sidebar-accent))";
                 }}
                 onMouseLeave={(e) => {
                   if (!active)
@@ -258,7 +258,7 @@ export function Sidebar({ collapsed, role }: SidebarProps) {
                   onMouseEnter={(e) => {
                     if (!anyChildActive)
                       (e.currentTarget as HTMLElement).style.background =
-                        "oklch(var(--sidebar-accent) / 0.5)";
+                        "oklch(var(--sidebar-accent))";
                   }}
                   onMouseLeave={(e) => {
                     if (!anyChildActive)
@@ -289,7 +289,7 @@ export function Sidebar({ collapsed, role }: SidebarProps) {
                 onMouseEnter={(e) => {
                   if (!anyChildActive)
                     (e.currentTarget as HTMLElement).style.background =
-                      "oklch(var(--sidebar-accent) / 0.5)";
+                      "oklch(var(--sidebar-accent))";
                 }}
                 onMouseLeave={(e) => {
                   if (!anyChildActive)
@@ -330,7 +330,7 @@ export function Sidebar({ collapsed, role }: SidebarProps) {
                         onMouseEnter={(e) => {
                           if (!childActive)
                             (e.currentTarget as HTMLElement).style.background =
-                              "oklch(var(--sidebar-accent) / 0.5)";
+                              "oklch(var(--sidebar-accent))";
                         }}
                         onMouseLeave={(e) => {
                           if (!childActive)

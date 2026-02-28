@@ -2,33 +2,17 @@ import { InvoiceModal } from "@/components/InvoiceModal";
 import { PaymentBadge, StatusBadge } from "@/components/StatusBadge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { SERVICES, SUB_SERVICES } from "@/constants/catalog";
 import { useGetBookings } from "@/hooks/useQueries";
+import { useServiceMaps } from "@/hooks/useServiceMaps";
 import { CalendarDays, FileText, Receipt } from "lucide-react";
 import { motion } from "motion/react";
-import { useMemo, useState } from "react";
+import { useState } from "react";
 
 export function InvoicesPage() {
   const [invoiceBookingId, setInvoiceBookingId] = useState<bigint | null>(null);
   const { data: bookings, isLoading } = useGetBookings();
-
-  const subServiceMap = useMemo(() => {
-    const map = new Map<string, string>();
-    for (const ss of SUB_SERVICES) map.set(ss.id, ss.name);
-    return map;
-  }, []);
-
-  const serviceMap = useMemo(() => {
-    const map = new Map<string, string>();
-    for (const s of SERVICES) map.set(s.id, s.name);
-    return map;
-  }, []);
-
-  const subServiceToServiceMap = useMemo(() => {
-    const map = new Map<string, string>();
-    for (const ss of SUB_SERVICES) map.set(ss.id, ss.serviceId);
-    return map;
-  }, []);
+  const { subServiceMap, serviceMap, subServiceToServiceMap } =
+    useServiceMaps();
 
   return (
     <div className="space-y-6">
@@ -53,7 +37,7 @@ export function InvoicesPage() {
           {[0, 1, 2].map((i) => (
             <div
               key={i}
-              className="flex items-center gap-4 px-4 py-3 rounded-lg border border-border"
+              className="flex items-center gap-4 px-4 py-3 rounded-lg border border-[#E5E7EB] bg-white shadow-xs"
             >
               <Skeleton className="h-4 w-16" />
               <Skeleton className="h-4 w-32 flex-1" />
@@ -80,7 +64,7 @@ export function InvoicesPage() {
       )}
 
       {!isLoading && bookings && bookings.length > 0 && (
-        <div className="rounded-xl border border-border bg-card overflow-hidden shadow-xs">
+        <div className="rounded-xl border border-[#E5E7EB] bg-white overflow-hidden shadow-xs">
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>

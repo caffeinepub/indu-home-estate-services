@@ -8,8 +8,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
-import { SERVICES, SUB_SERVICES } from "@/constants/catalog";
 import { useGetBookings, useGetTechnicians } from "@/hooks/useQueries";
+import { useServiceMaps } from "@/hooks/useServiceMaps";
 import { BarChart3, TrendingUp, Users, Wallet, Wrench } from "lucide-react";
 import { useMemo, useState } from "react";
 
@@ -19,24 +19,8 @@ export function ReportsPage() {
   const { data: bookings, isLoading: bookingsLoading } = useGetBookings();
   const { data: technicians, isLoading: techLoading } = useGetTechnicians();
   const [dateFilter, setDateFilter] = useState<DateFilter>("all");
-
-  const subServiceMap = useMemo(() => {
-    const map = new Map<string, string>();
-    for (const ss of SUB_SERVICES) map.set(ss.id, ss.name);
-    return map;
-  }, []);
-
-  const serviceMap = useMemo(() => {
-    const map = new Map<string, string>();
-    for (const s of SERVICES) map.set(s.id, s.name);
-    return map;
-  }, []);
-
-  const subServiceToServiceMap = useMemo(() => {
-    const map = new Map<string, string>();
-    for (const ss of SUB_SERVICES) map.set(ss.id, ss.serviceId);
-    return map;
-  }, []);
+  const { subServiceMap, serviceMap, subServiceToServiceMap } =
+    useServiceMaps();
 
   const filteredBookings = useMemo(() => {
     if (!bookings) return [];
@@ -166,7 +150,7 @@ export function ReportsPage() {
           return (
             <div
               key={card.label}
-              className="rounded-xl border border-border bg-card p-5 shadow-xs"
+              className="rounded-xl border border-[#E5E7EB] bg-white p-5 shadow-xs"
             >
               <div className="flex items-start gap-3">
                 <div
@@ -182,7 +166,7 @@ export function ReportsPage() {
                     </>
                   ) : (
                     <>
-                      <p className="font-display text-xl font-bold text-foreground leading-none">
+                      <p className="font-display text-xl font-bold text-[#111827] leading-none">
                         {card.value}
                       </p>
                       <p className="text-xs text-muted-foreground mt-1">
@@ -198,7 +182,7 @@ export function ReportsPage() {
       </div>
 
       {/* Revenue Table */}
-      <div className="rounded-xl border border-border bg-card shadow-xs overflow-hidden">
+      <div className="rounded-xl border border-[#E5E7EB] bg-white shadow-xs overflow-hidden">
         <div className="px-5 py-4 border-b border-border flex items-center gap-2">
           <BarChart3 className="w-4 h-4 text-muted-foreground" />
           <h2 className="font-semibold text-foreground text-sm">
@@ -314,7 +298,7 @@ export function ReportsPage() {
       </div>
 
       {/* Technician Payout Table */}
-      <div className="rounded-xl border border-border bg-card shadow-xs overflow-hidden">
+      <div className="rounded-xl border border-[#E5E7EB] bg-white shadow-xs overflow-hidden">
         <div className="px-5 py-4 border-b border-border flex items-center gap-2">
           <Users className="w-4 h-4 text-muted-foreground" />
           <h2 className="font-semibold text-foreground text-sm">

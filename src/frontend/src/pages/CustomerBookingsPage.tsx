@@ -1,8 +1,8 @@
 import { BookingRow, BookingRowSkeleton } from "@/components/BookingRow";
 import { InvoiceModal } from "@/components/InvoiceModal";
 import { StatusTimeline } from "@/components/StatusTimeline";
-import { SERVICES, SUB_SERVICES } from "@/constants/catalog";
 import { useGetBookings, useGetTechnicians } from "@/hooks/useQueries";
+import { useServiceMaps } from "@/hooks/useServiceMaps";
 import { BookOpen } from "lucide-react";
 import { motion } from "motion/react";
 import { useMemo, useState } from "react";
@@ -11,24 +11,8 @@ export function CustomerBookingsPage() {
   const [invoiceBookingId, setInvoiceBookingId] = useState<bigint | null>(null);
   const { data: bookings, isLoading: bookingsLoading } = useGetBookings();
   const { data: technicians } = useGetTechnicians();
-
-  const subServiceMap = useMemo(() => {
-    const map = new Map<string, string>();
-    for (const ss of SUB_SERVICES) map.set(ss.id, ss.name);
-    return map;
-  }, []);
-
-  const serviceMap = useMemo(() => {
-    const map = new Map<string, string>();
-    for (const s of SERVICES) map.set(s.id, s.name);
-    return map;
-  }, []);
-
-  const subServiceToServiceMap = useMemo(() => {
-    const map = new Map<string, string>();
-    for (const ss of SUB_SERVICES) map.set(ss.id, ss.serviceId);
-    return map;
-  }, []);
+  const { subServiceMap, serviceMap, subServiceToServiceMap } =
+    useServiceMaps();
 
   const myBookings = useMemo(
     () => (bookings ?? []).filter((b) => b.customerId === 0n),

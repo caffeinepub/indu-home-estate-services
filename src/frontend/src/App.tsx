@@ -76,7 +76,7 @@ function RootLayout() {
 
           {/* Main content */}
           <main
-            className="flex-1 p-6 overflow-auto"
+            className="flex-1 p-6 overflow-auto bg-[#F3F4F6]"
             style={{ marginTop: "60px" }}
           >
             <Outlet />
