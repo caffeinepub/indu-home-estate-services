@@ -122,7 +122,7 @@ function WebsiteLayoutWrapper() {
 
 /* ─── Route Tree ───────────────────────────────────────────────── */
 
-const rootRoute = createRootRoute();
+const rootRoute = createRootRoute({ component: Outlet });
 
 // ── Website layout (no sidebar/header) — mounted at "/"
 const websiteLayoutRoute = createRoute({
