@@ -16,6 +16,7 @@ import { DashboardPage } from "@/pages/DashboardPage";
 import { InspectionsDashboard } from "@/pages/InspectionsDashboard";
 import { InventoryPage } from "@/pages/InventoryPage";
 import { InvoicesPage } from "@/pages/InvoicesPage";
+import { LoginPage } from "@/pages/LoginPage";
 import { PropertiesAdminPage } from "@/pages/PropertiesAdminPage";
 import { QuotationsDashboard } from "@/pages/QuotationsDashboard";
 import { RatingsPage } from "@/pages/RatingsPage";
@@ -65,6 +66,28 @@ let appState: AppState = {
 
 function RootLayout() {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [isAuthenticated, setIsAuthenticated] = useState(() => {
+    return sessionStorage.getItem("admin_auth") === "true";
+  });
+
+  const handleLogin = (role: AppRole) => {
+    sessionStorage.setItem("admin_auth", "true");
+    setIsAuthenticated(true);
+    appState.setRole(role);
+  };
+
+  if (!isAuthenticated) {
+    return (
+      <ThemeProvider
+        attribute="class"
+        defaultTheme="light"
+        enableSystem={false}
+      >
+        <Toaster position="top-right" richColors />
+        <LoginPage onLogin={handleLogin} />
+      </ThemeProvider>
+    );
+  }
 
   return (
     <ThemeProvider attribute="class" defaultTheme="light" enableSystem={false}>
@@ -89,6 +112,10 @@ function RootLayout() {
             setRole={appState.setRole}
             activeTechnicianId={appState.activeTechnicianId}
             setActiveTechnicianId={appState.setActiveTechnicianId}
+            onLogout={() => {
+              sessionStorage.removeItem("admin_auth");
+              setIsAuthenticated(false);
+            }}
           />
 
           {/* Main content */}

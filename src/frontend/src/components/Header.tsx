@@ -12,6 +12,7 @@ import { useRouterState } from "@tanstack/react-router";
 import {
   Bell,
   ChevronDown,
+  LogOut,
   Menu,
   Moon,
   Search,
@@ -30,6 +31,7 @@ interface HeaderProps {
   setRole: (r: AppRole) => void;
   activeTechnicianId: bigint | null;
   setActiveTechnicianId: (id: bigint | null) => void;
+  onLogout?: () => void;
 }
 
 const ROUTE_TITLES: Record<string, string> = {
@@ -77,6 +79,7 @@ export function Header({
   setRole,
   activeTechnicianId,
   setActiveTechnicianId,
+  onLogout,
 }: HeaderProps) {
   const routerState = useRouterState();
   const pathname = routerState.location.pathname;
@@ -233,6 +236,19 @@ export function Header({
                     onClick={(e) => e.stopPropagation()}
                   />
                 </div>
+              </>
+            )}
+
+            {onLogout && (
+              <>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem
+                  onClick={onLogout}
+                  className="gap-2 text-sm text-destructive focus:text-destructive"
+                >
+                  <LogOut className="w-4 h-4" />
+                  Logout
+                </DropdownMenuItem>
               </>
             )}
           </DropdownMenuContent>
