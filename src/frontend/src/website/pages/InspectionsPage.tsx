@@ -335,13 +335,13 @@ export function InspectionsPage() {
                 </h3>
                 <div className="space-y-3">
                   <a
-                    href="tel:+919876543210"
+                    href="tel:+919901563799"
                     className="flex items-center gap-3 text-blue-200 hover:text-white transition-colors"
                   >
                     <div className="w-8 h-8 rounded-lg flex items-center justify-center bg-white/15">
                       <Phone className="w-4 h-4" />
                     </div>
-                    <span className="font-medium">+91 98765 43210</span>
+                    <span className="font-medium">+91 99015 63799</span>
                   </a>
                   <div className="flex items-center gap-3 text-blue-200">
                     <div className="w-8 h-8 rounded-lg flex items-center justify-center bg-white/15">

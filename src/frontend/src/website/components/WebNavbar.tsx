@@ -105,7 +105,8 @@ export function WebNavbar() {
             {/* Right actions */}
             <div className="flex items-center gap-3">
               <Link
-                to="/contact"
+                to="/book-now"
+                data-ocid="nav.booknow.button"
                 className="hidden sm:flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-semibold text-white transition-all duration-200"
                 style={{
                   background:
@@ -120,7 +121,7 @@ export function WebNavbar() {
                   (e.currentTarget as HTMLElement).style.transform = "none";
                 }}
               >
-                Book Service
+                Book Now
                 <ChevronRight className="w-3.5 h-3.5" />
               </Link>
 
@@ -171,11 +172,12 @@ export function WebNavbar() {
                 </Link>
               ))}
               <Link
-                to="/contact"
+                to="/book-now"
+                data-ocid="nav.mobile.booknow.button"
                 className="flex items-center justify-center gap-2 mx-0 mt-3 px-4 py-3 rounded-xl text-sm font-semibold text-white"
                 style={{ background: "#2563eb" }}
               >
-                Book Service
+                Book Now
                 <ChevronRight className="w-4 h-4" />
               </Link>
             </div>

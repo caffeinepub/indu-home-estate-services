@@ -2,17 +2,20 @@ import { useWebsiteStore } from "@/hooks/useWebsiteStore";
 import type { AppRole } from "@/lib/helpers";
 import { Link, useRouterState } from "@tanstack/react-router";
 import {
+  Archive,
   BarChart3,
   BookOpen,
   Building2,
   ChevronDown,
   ChevronRight,
+  FileCheck,
   Globe,
   Home,
   LayoutDashboard,
   List,
   Mail,
   MessageSquare,
+  Package,
   PlusCircle,
   Receipt,
   Search,
@@ -92,6 +95,16 @@ const NAV_ENTRIES: NavEntry[] = [
     items: [
       { label: "Add Service", to: "/admin/services/add", icon: PlusCircle },
       { label: "Service List", to: "/admin/services/list", icon: List },
+    ],
+  },
+  {
+    label: "Operations",
+    icon: Package,
+    adminOnly: true,
+    items: [
+      { label: "Inventory", to: "/admin/inventory", icon: Archive },
+      { label: "AMC Contracts", to: "/admin/amc", icon: FileCheck },
+      { label: "Ratings", to: "/admin/ratings", icon: Star },
     ],
   },
   {

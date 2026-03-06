@@ -600,7 +600,7 @@ export function ServicesPage() {
                                 {sub.description}
                               </p>
                               <Link
-                                to="/contact"
+                                to="/book-now"
                                 className="flex items-center justify-center gap-1.5 w-full py-2 rounded-lg text-xs font-bold text-white transition-all hover:opacity-90"
                                 style={{ background: "#2563eb" }}
                               >
@@ -618,7 +618,7 @@ export function ServicesPage() {
                         style={{ borderTop: "1px solid #f1f5f9" }}
                       >
                         <Link
-                          to="/contact"
+                          to="/book-now"
                           className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-bold text-white"
                           style={{ background: "#2563eb" }}
                         >

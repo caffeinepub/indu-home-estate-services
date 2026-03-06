@@ -1,7 +1,16 @@
 import { DashboardCards } from "@/components/DashboardCards";
 import { useWebsiteStore } from "@/hooks/useWebsiteStore";
 import { Link } from "@tanstack/react-router";
-import { Globe, Mail, MessageSquare, Search } from "lucide-react";
+import {
+  Archive,
+  FileCheck,
+  Globe,
+  Mail,
+  MessageSquare,
+  Package,
+  Search,
+  Star,
+} from "lucide-react";
 
 function WebsiteSummaryCards() {
   const store = useWebsiteStore();
@@ -83,6 +92,74 @@ function WebsiteSummaryCards() {
   );
 }
 
+function OperationsSummaryCards() {
+  const cards = [
+    {
+      label: "Low Stock Items",
+      value: 2,
+      to: "/admin/inventory",
+      icon: Archive,
+      bg: "#fee2e2",
+      color: "#DC2626",
+    },
+    {
+      label: "Active AMC Contracts",
+      value: 3,
+      to: "/admin/amc",
+      icon: FileCheck,
+      bg: "#dcfce7",
+      color: "#16A34A",
+    },
+    {
+      label: "Avg Rating",
+      value: "4.2/5",
+      to: "/admin/ratings",
+      icon: Star,
+      bg: "#fef3c7",
+      color: "#D97706",
+    },
+  ];
+
+  return (
+    <div className="space-y-3 pt-2">
+      <div className="flex items-center gap-2">
+        <Package className="w-4 h-4 text-muted-foreground" />
+        <h3 className="font-medium text-foreground text-sm">
+          Operations Overview
+        </h3>
+      </div>
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        {cards.map((card) => {
+          const Icon = card.icon;
+          return (
+            <Link
+              key={card.label}
+              to={card.to}
+              className="rounded-xl border border-[#E5E7EB] bg-white p-4 flex items-center gap-4 shadow-xs hover:shadow-md transition-shadow"
+            >
+              <div
+                className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0"
+                style={{ background: card.bg }}
+              >
+                <Icon className="w-5 h-5" style={{ color: card.color }} />
+              </div>
+              <div>
+                <p
+                  className="font-display text-2xl font-semibold"
+                  style={{ color: card.color }}
+                >
+                  {card.value}
+                </p>
+                <p className="text-xs text-muted-foreground">{card.label}</p>
+              </div>
+            </Link>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
 export function DashboardPage() {
   return (
     <div className="space-y-6">
@@ -97,6 +174,7 @@ export function DashboardPage() {
       </div>
       <DashboardCards />
       <WebsiteSummaryCards />
+      <OperationsSummaryCards />
     </div>
   );
 }

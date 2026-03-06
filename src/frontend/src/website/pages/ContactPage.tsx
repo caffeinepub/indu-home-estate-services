@@ -355,8 +355,8 @@ export function ContactPage() {
                     {
                       icon: Phone,
                       label: "Phone / WhatsApp",
-                      value: "+91 98765 43210",
-                      href: "tel:+919876543210",
+                      value: "+91 99015 63799",
+                      href: "tel:+919901563799",
                     },
                     {
                       icon: Mail,
@@ -419,7 +419,7 @@ export function ContactPage() {
                     },
                     {
                       icon: MessageCircle,
-                      href: "https://wa.me/919876543210",
+                      href: "https://wa.me/919901563799",
                       label: "WhatsApp",
                       color: "#25d366",
                     },
@@ -452,7 +452,7 @@ export function ContactPage() {
 
               {/* WhatsApp CTA */}
               <a
-                href="https://wa.me/919876543210?text=Hello%20Indu%20Homes"
+                href="https://wa.me/919901563799?text=Hello%20Indu%20Homes"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="flex items-center gap-4 rounded-3xl p-5 transition-transform hover:scale-[1.02]"

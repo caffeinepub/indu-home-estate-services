@@ -74,7 +74,7 @@ export function WebFooter() {
                 },
                 {
                   icon: MessageCircle,
-                  href: "https://wa.me/919876543210",
+                  href: "https://wa.me/919901563799",
                   label: "WhatsApp",
                   color: "#25d366",
                 },
@@ -112,9 +112,9 @@ export function WebFooter() {
                 { label: "Home", to: "/" },
                 { label: "About Us", to: "/about" },
                 { label: "Services", to: "/services" },
-                { label: "Properties", to: "/properties" },
+                { label: "Book Now", to: "/book-now" },
                 { label: "Free Inspection", to: "/inspections" },
-                { label: "Testimonials", to: "/testimonials" },
+                { label: "Contact Us", to: "/contact" },
               ].map((link) => (
                 <li key={link.to}>
                   <Link
@@ -186,10 +186,10 @@ export function WebFooter() {
                 </div>
                 <div>
                   <a
-                    href="tel:+919876543210"
+                    href="tel:+919901563799"
                     className="text-gray-300 text-sm hover:text-white transition-colors"
                   >
-                    +91 98765 43210
+                    +91 99015 63799
                   </a>
                   <p className="text-gray-500 text-xs">Mon–Sat, 9AM–6PM</p>
                 </div>

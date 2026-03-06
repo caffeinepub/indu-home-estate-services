@@ -116,7 +116,7 @@ export function BookingForm() {
       const subServiceName = selectedSubService?.name ?? "Sub-service";
 
       sendWhatsAppNotification("confirmed", {
-        to: "+91XXXXXXXXXX",
+        to: "+919901563799",
         bookingId: booking.id,
         service: subServiceName,
         date: scheduledDate,

@@ -271,11 +271,11 @@ function QuickContactStrip() {
             Contact Us Now
           </Link>
           <a
-            href="tel:+919876543210"
+            href="tel:+919901563799"
             className="px-8 py-4 rounded-xl font-bold transition-all hover:scale-105 text-blue-700"
             style={{ border: "2px solid #2563eb" }}
           >
-            Call: +91 98765 43210
+            Call: +91 99015 63799
           </a>
         </div>
       </div>

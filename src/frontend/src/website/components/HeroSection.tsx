@@ -83,7 +83,8 @@ export function HeroSection() {
         {/* CTAs */}
         <div className="flex flex-wrap justify-center gap-4 mb-16 hero-fade-in-delay-3">
           <Link
-            to="/contact"
+            to="/book-now"
+            data-ocid="hero.booknow.button"
             className="flex items-center gap-2 px-8 py-4 rounded-xl text-white font-bold text-sm transition-all duration-300 hover:scale-105"
             style={{
               background: "linear-gradient(135deg, #1d4ed8 0%, #2563eb 100%)",
@@ -91,7 +92,7 @@ export function HeroSection() {
             }}
           >
             <Calendar className="w-4 h-4" />
-            Book a Service
+            Book Now
             <ArrowRight className="w-4 h-4" />
           </Link>
           <Link

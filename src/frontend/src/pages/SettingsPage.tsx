@@ -42,7 +42,7 @@ export function SettingsPage() {
               label: "Tagline",
               value: "From Homes to Estates – We Handle It All.",
             },
-            { label: "Contact", value: "+91 94482 XXXXX" },
+            { label: "Contact", value: "+91 99015 63799" },
             { label: "GSTIN", value: "Applied For" },
           ].map((field) => (
             <div key={field.label} className="flex items-start gap-4">

@@ -1,49 +1,37 @@
 # Indu Homes & Estates Services
 
 ## Current State
-- The app has two route trees: dashboard (at `/`) and website (at `/website/*`)
-- The website navbar (`WebNavbar.tsx`) currently shows an "Admin Dashboard" button linking to `/` (the dashboard) — this is visible to public website visitors
-- The website's root URL is `/website` — the public site is not at the root path `/`
-- `ServicesPage.tsx` shows service cards that expand inline to show sub-services as simple price+name rows only — no images, no descriptions per sub-service
-- The Services page already has the STATIC_SERVICES data with descriptions, but sub-services lack individual images and descriptions
-- Existing generated images: hero, property photos, logo, Chikmagalur map — no service-category images
+- Full enterprise SaaS admin dashboard at `/admin` with: Dashboard overview, Bookings (Create/All/Invoices), Users, Technicians, Services, Reports, Settings, Website sections (Inspections, Quotations, Properties, Testimonials, Messages)
+- Public website at `/` with: Home, About, Services, Properties, Inspections, Contact, Testimonials, Book Now pages
+- Backend: Motoko canister with Users, Services, SubServices, Bookings, Technicians models and full CRUD
+- Commission (40%) and Company Profit (60%) calculations in place
+- CSV export in Reports, Bookings, etc.
 
 ## Requested Changes (Diff)
 
 ### Add
-- Route: make `/` (root) redirect to `/website` so the public website is the default landing URL
-- Make `/admin` the new root for the admin dashboard (all dashboard routes move to `/admin/*`)
-- Service card expansion: when a service card is clicked, open a modal or expanded panel showing sub-service cards with:
-  - Real image per sub-service
-  - Proper description per sub-service
-  - Price and "Book Now" CTA
-- Generate service category images (one per category: Plumbing, Electrical, Deep Cleaning, Painting, AC Service, Pest Control, Estate Maintenance) for the service cards
-- Generate sub-service images for each subcategory item
+1. **Inventory Management page** (`/admin/inventory`) -- track chemicals, tools, materials stock; add/deduct items; low stock alerts (threshold badge); each item: name, category, quantity, unit, min_threshold, last_updated
+2. **AMC Management page** (`/admin/amc`) -- Annual Maintenance Contracts; list with customer name, service type, start date, end date, value, status (active/expired/pending); renew and mark as expired actions
+3. **Customer Rating System page** (`/admin/ratings`) -- view, filter, and moderate customer ratings/reviews submitted; show star rating, comment, service name, date; admin can approve/reject/delete; average rating display
+4. **PDF Report Download** -- in ReportsPage, add a "Download PDF" button that generates a print-friendly PDF summary of the current filtered report (using browser print/window.print with a styled print layout)
+5. New sidebar entries: Inventory, AMC, Ratings (under a new "Operations" group)
+6. New routes in App.tsx for the 3 new pages
+7. Dashboard cards for: Inventory Low Stock alerts count, Active AMC contracts count, Avg Rating
 
 ### Modify
-- `App.tsx`: Move all dashboard routes under `/admin` prefix. Change the root `/` to redirect to `/website`. Update the not-found route to also redirect to `/website`.
-- `WebNavbar.tsx`: Remove the "Admin Dashboard" button/link entirely from the public navbar (both desktop and mobile menu). The admin dashboard should not be accessible from the public website.
-- `WebFooter.tsx`: Remove any admin dashboard link if present
-- `ServicesPage.tsx`: Enhance sub-service expansion panel to show image cards with descriptions, not just price rows
-- `STATIC_SERVICES`: Add `image` and `description` fields per sub-service item
-- All internal website links (to `/website/*`) remain unchanged
-- All dashboard-internal links already using relative routes — update any that reference `/` as the dashboard root to `/admin`
+- `Sidebar.tsx` -- add "Operations" group with Inventory, AMC, Ratings items
+- `DashboardPage.tsx` -- add 3 new operation cards (Low Stock, Active AMC, Avg Rating)
+- `App.tsx` -- register 3 new routes
+- `ReportsPage.tsx` -- add PDF download button using window.print
 
 ### Remove
-- "Admin Dashboard" button from `WebNavbar.tsx` (desktop and mobile)
-- Any link from the public website to the admin dashboard
+Nothing removed
 
 ## Implementation Plan
-
-1. Generate 7 service category hero images (one per main service)
-2. Generate representative sub-service images (grouped by category — can reuse per category)
-3. Update `App.tsx`:
-   - Change dashboard routes parent path from `/` to `/admin`
-   - Root `/` redirects to `/website`
-   - Not-found redirects to `/website`
-   - Update `websiteLayoutRoute` to stay at `/website`
-4. Update `WebNavbar.tsx`: remove Admin Dashboard link from desktop nav actions and mobile menu
-5. Update `Sidebar.tsx` or any component that links back to `/` to now link to `/admin`
-6. Update `ServicesPage.tsx` STATIC_SERVICES: add `image` field per service and per sub-service, add `subDescription` per sub-service
-7. Upgrade the ServicesPage sub-service expanded panel: replace simple price rows with image cards showing image, name, description, price, Book Now button
-8. Verify all enquiry forms (contact, inspection, quotation) still point to correct dashboard backend routes
+1. Create `InventoryPage.tsx` -- in-memory state (no backend changes), CRUD for inventory items, low stock badge
+2. Create `AMCPage.tsx` -- in-memory state, AMC contract management, status badges, renew action
+3. Create `RatingsPage.tsx` -- in-memory state seeded with sample ratings, approve/reject/delete, avg rating
+4. Update `ReportsPage.tsx` -- add PDF print button + print-specific CSS via inline style tag
+5. Update `Sidebar.tsx` -- add Operations group
+6. Update `App.tsx` -- add 3 routes
+7. Update `DashboardPage.tsx` -- add 3 operation summary cards

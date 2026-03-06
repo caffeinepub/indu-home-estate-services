@@ -3,6 +3,7 @@ import { Sidebar } from "@/components/Sidebar";
 import { Toaster } from "@/components/ui/sonner";
 import { WebsiteLayout } from "@/layouts/WebsiteLayout";
 import type { AppRole } from "@/lib/helpers";
+import { AMCPage } from "@/pages/AMCPage";
 import { AddServicePage } from "@/pages/AddServicePage";
 import { AddTechnicianPage } from "@/pages/AddTechnicianPage";
 import { AddUserPage } from "@/pages/AddUserPage";
@@ -13,9 +14,11 @@ import { CreateBookingPage } from "@/pages/CreateBookingPage";
 import { CustomerBookingsPage } from "@/pages/CustomerBookingsPage";
 import { DashboardPage } from "@/pages/DashboardPage";
 import { InspectionsDashboard } from "@/pages/InspectionsDashboard";
+import { InventoryPage } from "@/pages/InventoryPage";
 import { InvoicesPage } from "@/pages/InvoicesPage";
 import { PropertiesAdminPage } from "@/pages/PropertiesAdminPage";
 import { QuotationsDashboard } from "@/pages/QuotationsDashboard";
+import { RatingsPage } from "@/pages/RatingsPage";
 import { ReportsPage } from "@/pages/ReportsPage";
 import { ServiceListPage } from "@/pages/ServiceListPage";
 import { SettingsPage } from "@/pages/SettingsPage";
@@ -23,6 +26,7 @@ import { TechnicianJobsPage } from "@/pages/TechnicianJobsPage";
 import { TechnicianListPage } from "@/pages/TechnicianListPage";
 import { TestimonialsAdminPage } from "@/pages/TestimonialsAdminPage";
 import { AboutPage } from "@/website/pages/AboutPage";
+import { BookNowPage } from "@/website/pages/BookNowPage";
 import { ContactPage } from "@/website/pages/ContactPage";
 import { HomePage } from "@/website/pages/HomePage";
 import { InspectionsPage } from "@/website/pages/InspectionsPage";
@@ -173,6 +177,12 @@ const websiteTestimonialsRoute = createRoute({
   component: TestimonialsPage,
 });
 
+const websiteBookNowRoute = createRoute({
+  getParentRoute: () => websiteLayoutRoute,
+  path: "/book-now",
+  component: BookNowPage,
+});
+
 // ── Dashboard root (with sidebar/header layout) — mounted at "/admin"
 const dashboardLayoutRoute = createRoute({
   getParentRoute: () => rootRoute,
@@ -303,6 +313,24 @@ const contactMessagesRoute = createRoute({
   component: ContactMessagesDashboard,
 });
 
+const inventoryRoute = createRoute({
+  getParentRoute: () => dashboardLayoutRoute,
+  path: "/inventory",
+  component: InventoryPage,
+});
+
+const amcRoute = createRoute({
+  getParentRoute: () => dashboardLayoutRoute,
+  path: "/amc",
+  component: AMCPage,
+});
+
+const ratingsRoute = createRoute({
+  getParentRoute: () => dashboardLayoutRoute,
+  path: "/ratings",
+  component: RatingsPage,
+});
+
 const notFoundRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "*",
@@ -320,6 +348,7 @@ const routeTree = rootRoute.addChildren([
     websiteInspectionsRoute,
     websiteContactRoute,
     websiteTestimonialsRoute,
+    websiteBookNowRoute,
   ]),
   dashboardLayoutRoute.addChildren([
     indexRoute,
@@ -341,6 +370,9 @@ const routeTree = rootRoute.addChildren([
     propertiesAdminRoute,
     testimonialsAdminRoute,
     contactMessagesRoute,
+    inventoryRoute,
+    amcRoute,
+    ratingsRoute,
   ]),
   notFoundRoute,
 ]);

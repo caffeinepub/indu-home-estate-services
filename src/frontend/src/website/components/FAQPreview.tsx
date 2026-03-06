@@ -9,7 +9,7 @@ export const ALL_FAQS = [
   },
   {
     q: "How can I book a service?",
-    a: "You can book a service through our website using the 'Book a Service' button, call us directly at +91 98765 43210, or send a message on WhatsApp. We typically confirm your booking within 2 hours.",
+    a: "You can book a service through our website using the 'Book a Service' button, call us directly at +91 99015 63799, or send a message on WhatsApp. We typically confirm your booking within 2 hours.",
   },
   {
     q: "How will I receive the quotation?",
@@ -41,7 +41,7 @@ export const ALL_FAQS = [
   },
   {
     q: "How can I contact support?",
-    a: "You can reach us via phone at +91 98765 43210, email at induhomeservices@gmail.com, or WhatsApp. Our support team is available Monday to Saturday, 9AM to 6PM. Emergency services are available on request.",
+    a: "You can reach us via phone at +91 99015 63799, email at induhomeservices@gmail.com, or WhatsApp. Our support team is available Monday to Saturday, 9AM to 6PM. Emergency services are available on request.",
   },
   {
     q: "Is pricing fixed or negotiable?",
@@ -53,7 +53,7 @@ export const ALL_FAQS = [
   },
   {
     q: "Do you provide emergency services?",
-    a: "Yes, we handle emergency plumbing and electrical calls. Emergency service charges may apply outside business hours. Call us at +91 98765 43210 for immediate assistance.",
+    a: "Yes, we handle emergency plumbing and electrical calls. Emergency service charges may apply outside business hours. Call us at +91 99015 63799 for immediate assistance.",
   },
   {
     q: "How do I reschedule a booking?",
