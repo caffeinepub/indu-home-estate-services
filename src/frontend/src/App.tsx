@@ -34,6 +34,7 @@ import { InspectionsPage } from "@/website/pages/InspectionsPage";
 import { PropertiesPage } from "@/website/pages/PropertiesPage";
 import { ServicesPage } from "@/website/pages/ServicesPage";
 import { TestimonialsPage } from "@/website/pages/TestimonialsPage";
+import { TrackBookingPage } from "@/website/pages/TrackBookingPage";
 import {
   Navigate,
   Outlet,
@@ -210,6 +211,12 @@ const websiteBookNowRoute = createRoute({
   component: BookNowPage,
 });
 
+const websiteTrackBookingRoute = createRoute({
+  getParentRoute: () => websiteLayoutRoute,
+  path: "/track-booking",
+  component: TrackBookingPage,
+});
+
 // ── Dashboard root (with sidebar/header layout) — mounted at "/admin"
 const dashboardLayoutRoute = createRoute({
   getParentRoute: () => rootRoute,
@@ -376,6 +383,7 @@ const routeTree = rootRoute.addChildren([
     websiteContactRoute,
     websiteTestimonialsRoute,
     websiteBookNowRoute,
+    websiteTrackBookingRoute,
   ]),
   dashboardLayoutRoute.addChildren([
     indexRoute,

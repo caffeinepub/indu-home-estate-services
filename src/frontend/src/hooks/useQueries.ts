@@ -37,14 +37,14 @@ export function useCreateUser() {
 }
 
 export function useGetServices() {
-  const { actor, isFetching } = useActor();
+  const { actor } = useActor();
   return useQuery<Service[]>({
     queryKey: ["services"],
     queryFn: async () => {
       if (!actor) return [];
       return actor.getServices();
     },
-    enabled: !!actor && !isFetching,
+    enabled: !!actor,
     staleTime: 0,
     refetchOnMount: true,
   });
@@ -75,14 +75,14 @@ export function useCreateService() {
 }
 
 export function useGetSubServicesByService(serviceId: bigint | null) {
-  const { actor, isFetching } = useActor();
+  const { actor } = useActor();
   return useQuery<SubService[]>({
     queryKey: ["subServices", serviceId?.toString()],
     queryFn: async () => {
       if (!actor || serviceId === null) return [];
       return actor.getSubServicesByService(serviceId);
     },
-    enabled: !!actor && !isFetching && serviceId !== null,
+    enabled: !!actor && serviceId !== null,
     staleTime: 0,
     refetchOnMount: true,
   });
