@@ -29,6 +29,7 @@ import { TestimonialsAdminPage } from "@/pages/TestimonialsAdminPage";
 import { AboutPage } from "@/website/pages/AboutPage";
 import { BookNowPage } from "@/website/pages/BookNowPage";
 import { ContactPage } from "@/website/pages/ContactPage";
+import { FAQPage } from "@/website/pages/FAQPage";
 import { HomePage } from "@/website/pages/HomePage";
 import { InspectionsPage } from "@/website/pages/InspectionsPage";
 import { PropertiesPage } from "@/website/pages/PropertiesPage";
@@ -203,6 +204,12 @@ const websiteTestimonialsRoute = createRoute({
   getParentRoute: () => websiteLayoutRoute,
   path: "/testimonials",
   component: TestimonialsPage,
+});
+
+const websiteFaqRoute = createRoute({
+  getParentRoute: () => websiteLayoutRoute,
+  path: "/faq",
+  component: FAQPage,
 });
 
 const websiteBookNowRoute = createRoute({
@@ -382,6 +389,7 @@ const routeTree = rootRoute.addChildren([
     websiteInspectionsRoute,
     websiteContactRoute,
     websiteTestimonialsRoute,
+    websiteFaqRoute,
     websiteBookNowRoute,
     websiteTrackBookingRoute,
   ]),

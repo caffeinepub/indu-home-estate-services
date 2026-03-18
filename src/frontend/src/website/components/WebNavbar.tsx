@@ -10,6 +10,7 @@ const NAV_LINKS = [
   { label: "Inspections", to: "/inspections" },
   { label: "Contact", to: "/contact" },
   { label: "Testimonials", to: "/testimonials" },
+  { label: "FAQ", to: "/faq" },
   { label: "Track Booking", to: "/track-booking" },
 ];
 

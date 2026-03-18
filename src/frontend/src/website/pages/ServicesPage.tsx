@@ -1,7 +1,15 @@
 import { useGetServices } from "@/hooks/useQueries";
 import { Link } from "@tanstack/react-router";
-import { ChevronDown, ChevronRight } from "lucide-react";
-import { useState } from "react";
+import {
+  ChevronDown,
+  ChevronRight,
+  Grid3X3,
+  MapPin,
+  Search,
+  Star,
+  Users,
+} from "lucide-react";
+import { useMemo, useState } from "react";
 
 interface SubService {
   name: string;
@@ -423,11 +431,46 @@ const STATIC_SERVICES: Service[] = [
   },
 ];
 
+const CATEGORIES = [
+  "All",
+  "Home Repair",
+  "Cleaning",
+  "Renovation",
+  "Appliances",
+  "Protection",
+  "Estate",
+];
+
+const STATS = [
+  { icon: Grid3X3, value: "7", label: "Service Categories" },
+  { icon: Star, value: "50+", label: "Sub-services" },
+  { icon: Users, value: "500+", label: "Happy Customers" },
+  { icon: MapPin, value: "Chikmagalur", label: "Based & Operating" },
+];
+
 export function ServicesPage() {
   const [expandedService, setExpandedService] = useState<string | null>(null);
+  const [activeCategory, setActiveCategory] = useState("All");
+  const [searchQuery, setSearchQuery] = useState("");
   const { data: backendServices } = useGetServices();
 
-  const services = STATIC_SERVICES;
+  const filteredServices = useMemo(() => {
+    let list = STATIC_SERVICES;
+    if (activeCategory !== "All") {
+      list = list.filter((s) => s.category === activeCategory);
+    }
+    if (searchQuery.trim()) {
+      const q = searchQuery.toLowerCase();
+      list = list.filter(
+        (s) =>
+          s.name.toLowerCase().includes(q) ||
+          s.category.toLowerCase().includes(q) ||
+          s.description.toLowerCase().includes(q) ||
+          s.subServices.some((sub) => sub.name.toLowerCase().includes(q)),
+      );
+    }
+    return list;
+  }, [activeCategory, searchQuery]);
 
   return (
     <div className="pt-16">
@@ -452,7 +495,39 @@ export function ServicesPage() {
         </div>
       </section>
 
-      {/* Backend service count */}
+      {/* Stats Bar */}
+      <section
+        style={{
+          background:
+            "linear-gradient(90deg, #1d4ed8 0%, #2563eb 50%, #1d4ed8 100%)",
+        }}
+      >
+        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-0 divide-x divide-blue-500">
+            {STATS.map((stat) => (
+              <div
+                key={stat.label}
+                className="flex flex-col sm:flex-row items-center justify-center gap-2 sm:gap-3 py-5 px-4"
+              >
+                <div
+                  className="w-9 h-9 rounded-full flex items-center justify-center shrink-0"
+                  style={{ background: "rgba(255,255,255,0.15)" }}
+                >
+                  <stat.icon className="w-4 h-4 text-white" />
+                </div>
+                <div className="text-center sm:text-left">
+                  <p className="text-white font-extrabold text-lg leading-tight">
+                    {stat.value}
+                  </p>
+                  <p className="text-blue-200 text-xs">{stat.label}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Backend service count banner */}
       {backendServices && backendServices.length > 0 && (
         <div
           className="py-3"
@@ -467,27 +542,106 @@ export function ServicesPage() {
         </div>
       )}
 
-      {/* Services list */}
-      <section className="py-16 bg-white">
+      {/* Search + Filter */}
+      <section
+        className="py-8 bg-white"
+        style={{ borderBottom: "1px solid #e5e7eb" }}
+      >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="space-y-6">
-            {services.map((service, idx) => {
+          {/* Search bar */}
+          <div className="relative max-w-xl mx-auto mb-6">
+            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+            <input
+              data-ocid="services.search_input"
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Search services, e.g. AC repair, deep cleaning…"
+              className="w-full pl-10 pr-4 py-3 rounded-xl text-sm outline-none transition-all"
+              style={{
+                border: "1.5px solid #e5e7eb",
+                background: "#f9fafb",
+              }}
+              onFocus={(e) => {
+                e.currentTarget.style.borderColor = "#2563eb";
+                e.currentTarget.style.background = "#fff";
+              }}
+              onBlur={(e) => {
+                e.currentTarget.style.borderColor = "#e5e7eb";
+                e.currentTarget.style.background = "#f9fafb";
+              }}
+            />
+          </div>
+
+          {/* Category filter pills */}
+          <div className="flex flex-wrap gap-2 justify-center">
+            {CATEGORIES.map((cat) => (
+              <button
+                key={cat}
+                type="button"
+                data-ocid={`services.${cat.toLowerCase().replace(/\s+/g, "-")}.tab`}
+                onClick={() => {
+                  setActiveCategory(cat);
+                  setExpandedService(null);
+                }}
+                className="px-4 py-2 rounded-full text-sm font-semibold transition-all duration-200"
+                style={{
+                  background: activeCategory === cat ? "#2563eb" : "#f1f5f9",
+                  color: activeCategory === cat ? "#ffffff" : "#374151",
+                  border:
+                    activeCategory === cat
+                      ? "1.5px solid #2563eb"
+                      : "1.5px solid transparent",
+                  boxShadow:
+                    activeCategory === cat
+                      ? "0 2px 8px rgba(37,99,235,0.25)"
+                      : "none",
+                }}
+              >
+                {cat}
+              </button>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Services list */}
+      <section className="py-12 bg-gray-50">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          {filteredServices.length === 0 && (
+            <div data-ocid="services.empty_state" className="text-center py-20">
+              <p className="text-4xl mb-4">🔍</p>
+              <h3 className="text-lg font-bold text-gray-700 mb-2">
+                No services found
+              </h3>
+              <p className="text-gray-500 text-sm">
+                Try a different search term or category.
+              </p>
+            </div>
+          )}
+
+          <div className="space-y-5">
+            {filteredServices.map((service, idx) => {
               const isOpen = expandedService === service.name;
               return (
                 <div
                   key={service.name}
-                  className="rounded-2xl overflow-hidden transition-all duration-300"
+                  data-ocid={`services.item.${idx + 1}`}
+                  className="rounded-2xl overflow-hidden transition-all duration-300 bg-white"
                   style={{
-                    border: isOpen ? "1px solid #bfdbfe" : "1px solid #e5e7eb",
+                    border: isOpen
+                      ? "1.5px solid #bfdbfe"
+                      : "1.5px solid #e5e7eb",
                     boxShadow: isOpen
-                      ? "0 8px 30px rgba(37,99,235,0.1)"
+                      ? "0 8px 32px rgba(37,99,235,0.12)"
                       : "0 2px 8px rgba(0,0,0,0.04)",
                   }}
                 >
-                  {/* Service header */}
-                  <div
-                    className="flex items-center gap-4 p-6 cursor-pointer"
-                    style={{ animationDelay: `${idx * 60}ms` }}
+                  {/* Service header — banner image with gradient overlay */}
+                  <button
+                    type="button"
+                    className="relative cursor-pointer overflow-hidden w-full"
+                    style={{ height: "180px" }}
                     onClick={() =>
                       setExpandedService(isOpen ? null : service.name)
                     }
@@ -496,71 +650,103 @@ export function ServicesPage() {
                       setExpandedService(isOpen ? null : service.name)
                     }
                   >
-                    {/* Category image thumbnail */}
+                    {/* Banner image */}
+                    <img
+                      src={service.image}
+                      alt={service.name}
+                      className="w-full h-full object-cover transition-transform duration-500"
+                      style={{ transform: isOpen ? "scale(1.03)" : "scale(1)" }}
+                    />
+
+                    {/* Dark gradient overlay */}
                     <div
-                      className="w-16 h-16 rounded-2xl overflow-hidden shrink-0"
-                      style={{ border: "2px solid #e5e7eb" }}
-                    >
-                      <img
-                        src={service.image}
-                        alt={service.name}
-                        className="w-full h-full object-cover"
-                      />
-                    </div>
-
-                    {/* Info */}
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 flex-wrap">
-                        <span className="text-xl">{service.icon}</span>
-                        <h3 className="font-display text-lg font-bold text-gray-900">
-                          {service.name}
-                        </h3>
-                        <span
-                          className="px-2 py-0.5 rounded-full text-xs font-medium"
-                          style={{
-                            background: service.colorBg,
-                            color: "#374151",
-                          }}
-                        >
-                          {service.category}
-                        </span>
-                      </div>
-                      <p className="text-gray-500 text-sm mt-1 line-clamp-2">
-                        {service.description}
-                      </p>
-                    </div>
-
-                    {/* Price & toggle */}
-                    <div className="text-right shrink-0 ml-4">
-                      <p className="text-xs text-gray-500 mb-1">From</p>
-                      <p className="font-display font-bold text-blue-600 text-lg">
-                        {service.startingFrom}
-                      </p>
-                    </div>
-
-                    <ChevronDown
-                      className="w-5 h-5 text-gray-400 shrink-0 transition-transform duration-300 ml-2"
+                      className="absolute inset-0"
                       style={{
-                        transform: isOpen ? "rotate(180deg)" : "none",
+                        background:
+                          "linear-gradient(to right, rgba(15,23,42,0.82) 0%, rgba(15,23,42,0.55) 60%, rgba(15,23,42,0.25) 100%)",
                       }}
                     />
-                  </div>
+
+                    {/* Content on top of overlay */}
+                    <div className="absolute inset-0 flex items-center justify-between px-6">
+                      {/* Left: icon, name, category */}
+                      <div className="flex flex-col gap-2">
+                        <div className="flex items-center gap-3">
+                          <span className="text-3xl drop-shadow">
+                            {service.icon}
+                          </span>
+                          <div>
+                            <h3 className="font-display text-xl sm:text-2xl font-extrabold text-white leading-tight drop-shadow">
+                              {service.name}
+                            </h3>
+                            <span
+                              className="inline-block mt-1 px-2.5 py-0.5 rounded-full text-xs font-semibold"
+                              style={{
+                                background: "rgba(255,255,255,0.18)",
+                                color: "#e0f2fe",
+                                backdropFilter: "blur(6px)",
+                                border: "1px solid rgba(255,255,255,0.2)",
+                              }}
+                            >
+                              {service.category}
+                            </span>
+                          </div>
+                        </div>
+                        <p className="text-gray-300 text-xs max-w-xs line-clamp-2 hidden sm:block">
+                          {service.description}
+                        </p>
+                      </div>
+
+                      {/* Right: starting price + chevron */}
+                      <div className="flex flex-col items-end gap-3 shrink-0 ml-4">
+                        {/* Starting from badge */}
+                        <div
+                          className="px-3 py-1.5 rounded-xl text-center"
+                          style={{
+                            background: "rgba(37,99,235,0.85)",
+                            backdropFilter: "blur(8px)",
+                            border: "1px solid rgba(96,165,250,0.4)",
+                          }}
+                        >
+                          <p className="text-blue-200 text-xs leading-none mb-0.5">
+                            Starting from
+                          </p>
+                          <p className="text-white font-extrabold text-base leading-none">
+                            {service.startingFrom}
+                          </p>
+                        </div>
+
+                        <div
+                          className="w-8 h-8 rounded-full flex items-center justify-center transition-transform duration-300"
+                          style={{
+                            background: "rgba(255,255,255,0.15)",
+                            transform: isOpen ? "rotate(180deg)" : "none",
+                          }}
+                        >
+                          <ChevronDown className="w-4 h-4 text-white" />
+                        </div>
+                      </div>
+                    </div>
+                  </button>
 
                   {/* Sub-services as image cards */}
                   {isOpen && (
                     <div
-                      className="px-6 pb-6"
+                      className="px-5 pb-6"
                       style={{ borderTop: "1px solid #f1f5f9" }}
                     >
+                      {/* Description on mobile (not shown in banner) */}
+                      <p className="text-gray-500 text-sm mt-4 mb-1 sm:hidden">
+                        {service.description}
+                      </p>
+
                       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mt-5">
-                        {service.subServices.map((sub) => (
+                        {service.subServices.map((sub, subIdx) => (
                           <div
                             key={sub.name}
-                            className="rounded-xl overflow-hidden transition-all duration-200 hover:shadow-md"
-                            style={{
-                              border: "1px solid #e5e7eb",
-                              background: "#ffffff",
-                            }}
+                            data-ocid={`services.sub.item.${subIdx + 1}`}
+                            className="rounded-xl overflow-hidden transition-all duration-200 hover:shadow-md bg-white"
+                            style={{ border: "1px solid #e5e7eb" }}
                             onMouseEnter={(e) => {
                               (
                                 e.currentTarget as HTMLElement
@@ -572,14 +758,14 @@ export function ServicesPage() {
                               ).style.borderColor = "#e5e7eb";
                             }}
                           >
-                            {/* Sub-service image */}
+                            {/* Sub-service image 16:9 */}
                             <div className="relative aspect-video overflow-hidden">
                               <img
                                 src={sub.image}
                                 alt={sub.name}
                                 className="w-full h-full object-cover transition-transform duration-300 hover:scale-105"
                               />
-                              {/* Price badge overlay */}
+                              {/* Price badge overlay top-right */}
                               <div
                                 className="absolute top-2 right-2 px-2 py-1 rounded-lg text-xs font-bold text-white"
                                 style={{
@@ -601,6 +787,7 @@ export function ServicesPage() {
                               </p>
                               <Link
                                 to="/book-now"
+                                data-ocid={`services.sub.book_button.${subIdx + 1}`}
                                 className="flex items-center justify-center gap-1.5 w-full py-2 rounded-lg text-xs font-bold text-white transition-all hover:opacity-90"
                                 style={{ background: "#2563eb" }}
                               >
@@ -619,6 +806,7 @@ export function ServicesPage() {
                       >
                         <Link
                           to="/book-now"
+                          data-ocid="services.book.primary_button"
                           className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-bold text-white"
                           style={{ background: "#2563eb" }}
                         >
@@ -628,6 +816,7 @@ export function ServicesPage() {
                         <Link
                           to="/contact"
                           search={{ type: "quotation" } as never}
+                          data-ocid="services.quote.secondary_button"
                           className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold text-blue-700"
                           style={{ border: "2px solid #2563eb" }}
                         >
@@ -635,6 +824,7 @@ export function ServicesPage() {
                         </Link>
                         <Link
                           to="/inspections"
+                          data-ocid="services.inspection.secondary_button"
                           className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold text-gray-600"
                           style={{ border: "2px solid #e5e7eb" }}
                         >
@@ -668,12 +858,14 @@ export function ServicesPage() {
           <div className="flex flex-wrap justify-center gap-4">
             <Link
               to="/contact"
+              data-ocid="services.contact.primary_button"
               className="px-8 py-4 rounded-xl text-blue-800 font-bold bg-white hover:scale-105 transition-transform"
             >
               Contact Us
             </Link>
             <Link
               to="/inspections"
+              data-ocid="services.inspection_cta.secondary_button"
               className="px-8 py-4 rounded-xl text-white font-bold hover:scale-105 transition-transform"
               style={{ border: "2px solid rgba(255,255,255,0.4)" }}
             >
